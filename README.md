@@ -21,14 +21,14 @@ Moreover, the implementation of adCAPTCHA is designed with performance in mind. 
 
 * Login
 * Comments
-* ForgotPassword
+* Forgot Password
 * Register
 
 ### Woocommerce
 
 * Login
 * Comments
-* ForgotPassword
+* Forgot Password
 * Register
 
 ### ContactForm7
