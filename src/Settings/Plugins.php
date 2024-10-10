@@ -41,6 +41,11 @@ class Plugins {
                 'logo' => 'elementor_logo.png',
                 'options' => array('Forms')
             ),
+            array(
+                'label' => 'FluentForms',
+                'logo' => 'fluent_forms_logo.png',
+                'options' => array('Forms')
+            ),
         );
 
         $saved_setting = false;
