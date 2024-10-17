@@ -1,10 +1,10 @@
 <?php
 
-namespace AdCaptcha\Plugin\NinjaForms\Froms;
+namespace AdCaptcha\Plugin\NinjaForms;
 
-use AdCaptcha\Plugin\NinjaForms\AdCaptchaField\AdCaptchaField;
-use AdCaptcha\Widget\AdCaptcha\AdCaptcha;
-use AdCaptcha\AdCaptchaPlugin\AdCaptchaPlugin;
+use AdCaptcha\Plugin\NinjaForms\AdCaptchaField;
+use AdCaptcha\Widget\AdCaptcha;
+use AdCaptcha\Plugin\AdCaptchaPlugin;
 
 class Forms extends AdCaptchaPlugin {
 
