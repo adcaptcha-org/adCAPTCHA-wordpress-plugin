@@ -1,6 +1,6 @@
 <?php
 
-namespace AdCaptcha\Widget\Verify;
+namespace AdCaptcha\Widget;
 
 class Verify {
     public static function verify_token($successToken) {

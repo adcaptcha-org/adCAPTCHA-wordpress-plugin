@@ -1,10 +1,10 @@
 <?php
 
-namespace AdCaptcha\Plugin\Woocommerce\Login;
+namespace AdCaptcha\Plugin\Woocommerce;
 
-use AdCaptcha\Widget\AdCaptcha\AdCaptcha;
-use AdCaptcha\Widget\Verify\Verify;
-use AdCaptcha\AdCaptchaPlugin\AdCaptchaPlugin;
+use AdCaptcha\Widget\AdCaptcha;
+use AdCaptcha\Widget\Verify;
+use AdCaptcha\Plugin\AdCaptchaPlugin;
 use WP_Error;
 
 class Login extends AdCaptchaPlugin {

@@ -1,6 +1,6 @@
 <?php
 
-namespace AdCaptcha\Settings;
+namespace AdCaptcha;
 
 class Settings {
     public function setup() {
@@ -51,11 +51,11 @@ class Settings {
             <?php
                 switch ($tab) {
                     case 'general':
-                        $generalSettings = new \AdCaptcha\Settings\General\General();
+                        $generalSettings = new \AdCaptcha\Settings\General();
                         $generalSettings->render_general_settings();
                         break;
                     case 'plugins':
-                        $pluginsSettings = new \AdCaptcha\Settings\Plugins\Plugins();
+                        $pluginsSettings = new \AdCaptcha\Settings\Plugins();
                         $pluginsSettings->render_Plugins_settings();
                         break;
                 }

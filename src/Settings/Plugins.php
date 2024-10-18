@@ -1,6 +1,6 @@
 <?php
 
-namespace AdCaptcha\Settings\Plugins;
+namespace AdCaptcha\Settings;
 
 class Plugins {
      

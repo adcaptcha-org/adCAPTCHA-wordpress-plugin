@@ -1,10 +1,10 @@
 <?php
 
-namespace AdCaptcha\Plugin\Mailchimp\Froms;
+namespace AdCaptcha\Plugin\Mailchimp;
 
-use AdCaptcha\Widget\AdCaptcha\AdCaptcha;
-use AdCaptcha\Widget\Verify\Verify;
-use AdCaptcha\AdCaptchaPlugin\AdCaptchaPlugin;
+use AdCaptcha\Widget\AdCaptcha;
+use AdCaptcha\Widget\Verify;
+use AdCaptcha\Plugin\AdCaptchaPlugin;
 
 use MC4WP_Form;
 use MC4WP_Form_Element;

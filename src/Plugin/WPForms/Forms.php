@@ -1,11 +1,11 @@
 <?php
 
-namespace AdCaptcha\Plugin\WPForms\Froms;
+namespace AdCaptcha\Plugin\WPForms;
 
-use AdCaptcha\Plugin\WPForms\AdCAPTCHA_WPForms_Field\AdCAPTCHA_WPForms_Field;
-use AdCaptcha\Widget\AdCaptcha\AdCaptcha;
-use AdCaptcha\Widget\Verify\Verify;
-use AdCaptcha\AdCaptchaPlugin\AdCaptchaPlugin;
+use AdCaptcha\Plugin\WPForms\AdCAPTCHA_WPForms_Field;
+use AdCaptcha\Widget\AdCaptcha;
+use AdCaptcha\Widget\Verify;
+use AdCaptcha\Plugin\AdCaptchaPlugin;
 
 class Forms extends AdCaptchaPlugin {
 
