@@ -70,6 +70,6 @@ class Settings {
     }
 
     public function change_admin_footer_version() {
-        return 'Version 1.3.1';
+        return 'Version 1.4.0';
     }
 }
