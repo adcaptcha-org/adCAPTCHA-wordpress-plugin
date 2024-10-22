@@ -1,0 +1,27 @@
+{
+    "name": "adcaptcha/testforms", 
+    "description": "A PHPunit test to testing Plugin forms",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+      "psr-4": {
+          "AdCaptcha\\": "src/"
+      }
+  },
+  "autoload-dev": {
+      "psr-4": {
+          "AdCaptcha\\Tests\\": "tests/"
+      }
+  },
+    "authors": [
+        {
+            "name": "adCAPTCHA developer team",
+            "email": "support@adCAPTCHA.com"
+        }
+    ],
+    "minimum-stability": "dev",  
+    "require-dev": {
+        "phpunit/phpunit": "^11.4.1",
+        "10up/wp_mock": "^0.4.2"  
+    }
+  }

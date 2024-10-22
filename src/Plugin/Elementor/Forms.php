@@ -1,10 +1,10 @@
 <?php
 
-namespace AdCaptcha\Plugin\Elementor\Forms;
+namespace AdCaptcha\Plugin\Elementor;
 
-use AdCaptcha\Widget\AdCaptcha\AdCaptcha;
-use AdCaptcha\Widget\Verify\Verify;
-use AdCaptcha\AdCaptchaPlugin\AdCaptchaPlugin;
+use AdCaptcha\Widget\AdCaptcha;
+use AdCaptcha\Widget\Verify;
+use AdCaptcha\Plugin\AdCaptchaPlugin;
 
 use Elementor\Controls_Stack;
 use Elementor\Plugin as ElementorPlugin;
@@ -129,7 +129,6 @@ class Forms extends AdCaptchaPlugin {
         $field = current( $fields );
 
         $successToken = sanitize_text_field(wp_unslash($_POST['adcaptcha_successToken']));
-		error_log('Success Token: ' . $successToken);
 
         if ( empty( $successToken ) ) {
 			$ajax_handler->add_error( $field['id'], __( 'Please complete the I am human box', 'elementor-pro' ) );

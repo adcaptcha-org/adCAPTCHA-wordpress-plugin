@@ -4,7 +4,7 @@ namespace AdCaptcha\Plugin\Woocommerce\PasswordReset;
 
 use AdCaptcha\Widget\AdCaptcha\AdCaptcha;
 use AdCaptcha\Widget\Verify\Verify;
-use AdCaptcha\AdCaptchaPlugin\AdCaptchaPlugin;
+use AdCaptcha\Plugin\AdCaptchaPlugin;
 use WP_Error;
 
 class PasswordReset extends AdCaptchaPlugin {

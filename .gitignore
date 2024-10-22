@@ -1,0 +1,4 @@
+/vendor
+
+# Ignore PHPUnit result cache
+.phpunit.result.cache

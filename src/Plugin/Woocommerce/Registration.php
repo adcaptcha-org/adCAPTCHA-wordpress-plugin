@@ -4,7 +4,7 @@ namespace AdCaptcha\Plugin\Woocommerce\Registration;
 
 use AdCaptcha\Widget\AdCaptcha\AdCaptcha;
 use AdCaptcha\Widget\Verify\Verify;
-use AdCaptcha\AdCaptchaPlugin\AdCaptchaPlugin;
+use AdCaptcha\Plugin\AdCaptchaPlugin;
 use WP_Error;
 
 class Registration extends AdCaptchaPlugin {
