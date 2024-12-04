@@ -9,7 +9,7 @@ namespace AdCaptcha\Tests\Plugin\NinjaForms;
 
 use PHPUnit\Framework\TestCase;
 use AdCaptcha\Plugin\NinjaForms\Forms;
-use AdCaptcha\Plugin\NinjaForms\AdCaptchaField;
+use AdCaptcha\Plugin\NinjaForms\AdcaptchaField;
 use AdCaptcha\Widget\AdCaptcha;
 use AdCaptcha\Widget\Verify;
 use Brain\Monkey\Functions;
@@ -43,11 +43,12 @@ class NinjaFormsTest extends TestCase {
         }
 
         Functions\when('esc_html__')->justReturn('adCAPTCHA');
-        
-        $this->adCaptchaField = new AdCaptchaField(false);
+        Functions\when('esc_attr')->justReturn('test_value');
+        Functions\when('get_option')->justReturn('your_placement_id_value');
+        $this->adCaptchaField = new AdcaptchaField(false);
         $this->verifyMock = $this->createMock(Verify::class);
 
-        // using reflection to set the verify property to be accessible because verify it is a private property from the AdCaptchaField class
+        // using reflection to set the verify property to be accessible because verify it is a private property from the AdcaptchaField class
         $reflection = new \ReflectionClass($this->adCaptchaField);
         $property = $reflection->getProperty('verify');
         $property->setAccessible(true);
@@ -84,14 +85,14 @@ class NinjaFormsTest extends TestCase {
         parent::tearDown();
     }
 
-    // Tests validation of an empty field and ensures AdCaptchaField is not null and has a validate method.
+    // Tests validation of an empty field and ensures AdcaptchaField is not null and has a validate method.
     public function testValidateEmptyField() {
         $field = ['value' => ''];
         $result = $this->adCaptchaField->validate($field, []);
        
         $this->assertEquals(esc_html__(ADCAPTCHA_ERROR_MESSAGE), $result);
-        $this->assertNotNull($this->adCaptchaField, 'AdCaptchaField should not be null after setUp');
-        $this->assertTrue(method_exists($this->adCaptchaField, 'validate'), 'Method validate does not exist in AdCaptchaField');
+        $this->assertNotNull($this->adCaptchaField, 'AdcaptchaField should not be null after setUp');
+        $this->assertTrue(method_exists($this->adCaptchaField, 'validate'), 'Method validate does not exist in AdcaptchaField');
     }
 
     // Tests validation with an invalid token, ensuring the result is the expected error message.
@@ -155,10 +156,10 @@ class NinjaFormsTest extends TestCase {
         $this->assertTrue(is_callable([$this->forms, 'setup']), 'Method setup is not callable');
     }
 
-    // Tests if the register_field method registers AdCaptchaField, returns an array, and verifies method existence.
+    // Tests if the register_field method registers AdcaptchaField, returns an array, and verifies method existence.
     public function testRegisterField() {
-        // Create a partial mock of AdCaptchaField without calling the constructor
-        $mockedAdCaptchaField = Mockery::mock(AdCaptchaField::class)    ->makePartial();
+        // Create a partial mock of AdcaptchaField without calling the constructor
+        $mockedAdCaptchaField = Mockery::mock(AdcaptchaField::class)    ->makePartial();
         $mockedAdCaptchaField->shouldReceive('__construct')->andReturnNull();
         // Mock the Forms class and override the register_field method
         $this->forms = Mockery::mock(Forms::class)->makePartial();
@@ -173,7 +174,7 @@ class NinjaFormsTest extends TestCase {
             
         $this->assertIsArray($result, 'Expected result to be an array');
         $this->assertArrayHasKey('adcaptcha', $result, 'Expected key not found');
-        $this->assertInstanceOf(AdCaptchaField::class, $result['adcaptcha'], 'Expected instance of AdCaptchaField');
+        $this->assertInstanceOf(AdcaptchaField::class, $result['adcaptcha'], 'Expected instance of AdcaptchaField');
         $this->assertTrue(method_exists($this->forms, 'register_field'), 'Method register_field does not exist');
     }
 
@@ -187,13 +188,39 @@ class NinjaFormsTest extends TestCase {
         $this->assertTrue(method_exists($this->forms, 'register_template'), 'Method register_template does not exist');
     }
 
-    // // // Tests that `render_field` method exists and returns an array with 'settings' containing an 'adcaptcha' HTML div element.
-    // public function testRenderField() {
-    //     $field = $this->forms->render_field([]);
+    // // Tests that `render_field` method exists and returns an array with 'settings' containing an 'adcaptcha' HTML div element.
+    public function testRenderField() {
+        $field = $this->forms->render_field([]);
+      
+        $this->assertArrayHasKey('settings', $field);
+        $this->assertArrayHasKey('adcaptcha', $field['settings']);
+        $this->assertStringContainsString('<div', $field['settings']['adcaptcha']);
+        $this->assertTrue(method_exists($this->forms, 'render_field'), 'Method render_field does not exist');
+    }
 
-    //     // $this->assertArrayHasKey('settings', $field);
-    //     // $this->assertArrayHasKey('adcaptcha', $field['settings']);
-    //     // $this->assertStringContainsString('<div', $field['settings']['adcaptcha']);
-    //     // $this->assertTrue(method_exists($this->forms, 'render_field'), 'Method render_field does not exist');
-    // }
+    // Tests that the `load_scripts` method correctly enqueues the AdCaptcha script with the expected parameters and that the `PLUGIN_VERSION_ADCAPTCHA` constant is defined.
+    public function testLoadScripts() {
+        if (!defined('PLUGIN_VERSION_ADCAPTCHA')) {
+            define('PLUGIN_VERSION_ADCAPTCHA', '1.0.0');
+        }
+    
+        Functions\when('plugins_url')
+            ->justReturn('path/to/script/AdCaptchaFieldController.js');
+    
+        Functions\expect('wp_enqueue_script')
+            ->with(
+                'adcaptcha-ninjaforms',
+                'path/to/script/AdCaptchaFieldController.js',
+                ['nf-front-end'],
+                PLUGIN_VERSION_ADCAPTCHA,
+                true
+            )
+            ->once(); 
+    
+        $this->forms->load_scripts();
+    
+        $this->assertTrue(defined('PLUGIN_VERSION_ADCAPTCHA'), 'PLUGIN_VERSION_ADCAPTCHA is not defined');
+
+        $this->assertTrue(method_exists($this->forms, 'load_scripts'), 'Method load_scripts does not exist');
+    }
 }
