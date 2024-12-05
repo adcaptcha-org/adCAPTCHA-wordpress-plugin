@@ -13,14 +13,9 @@ use AdCaptcha\Plugin\NinjaForms\AdcaptchaField;
 use AdCaptcha\Widget\AdCaptcha;
 use AdCaptcha\Widget\Verify;
 use Brain\Monkey\Functions;
-use Brain\Monkey\WP\Actions;
-use Brain\Monkey\WP\Filters;
-use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 use Mockery;
 
 class NinjaFormsTest extends TestCase {
-    // use MockeryPHPUnitIntegration;
-
     private $forms;
     private $adCaptchaField;
     private $nfMock;
@@ -81,6 +76,7 @@ class NinjaFormsTest extends TestCase {
     }
 
     public function tierDown(): void {
+        \Brain\Monkey\tearDown();
         Mockery::close();
         parent::tearDown();
     }
