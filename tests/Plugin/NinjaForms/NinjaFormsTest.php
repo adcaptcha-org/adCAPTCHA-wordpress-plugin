@@ -13,6 +13,7 @@ use AdCaptcha\Plugin\NinjaForms\AdcaptchaField;
 use AdCaptcha\Widget\AdCaptcha;
 use AdCaptcha\Widget\Verify;
 use Brain\Monkey\Functions;
+use Brain\Monkey;
 use Mockery;
 
 class NinjaFormsTest extends TestCase {
@@ -25,7 +26,7 @@ class NinjaFormsTest extends TestCase {
 
     public function setUp(): void {
         parent::setUp();
-        
+        Monkey\setUp();
         $this->nfMock = Mockery::mock('NF_Fields_Recaptcha')
             ->shouldIgnoreMissing();
 
@@ -76,7 +77,7 @@ class NinjaFormsTest extends TestCase {
     }
 
     public function tierDown(): void {
-        \Brain\Monkey\tearDown();
+        Monkey\tearDown();
         Mockery::close();
         parent::tearDown();
     }
