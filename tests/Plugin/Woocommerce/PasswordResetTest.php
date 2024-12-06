@@ -32,7 +32,7 @@ class PasswordResetTest extends TestCase {
 
         Functions\when('wp_unslash')->justReturn('invalid_token'); 
         Functions\when('sanitize_text_field')->justReturn('invalid_token'); 
-        Functions\when('__')->alias(function ($text, $domain = null) {
+        Functions\when('__')->alias(function ($text) {
             return $text; 
         });
 
