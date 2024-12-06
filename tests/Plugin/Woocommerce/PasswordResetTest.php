@@ -44,7 +44,7 @@ class PasswordResetTest extends TestCase
     public function testSetup() {
         $this->forms->setup();
         global $mocked_actions, $mocked_filters;
-      var_dump($mocked_filters);
+   
         $this->assertTrue(method_exists($this->forms, 'setup'));
     
     }
