@@ -50,6 +50,7 @@ class MailchimpTest extends TestCase
     public function testSetup() {
         $this->forms->setup();
         global $mocked_actions, $mocked_filters;
+      
         $this->assertTrue(method_exists($this->forms, 'setup'));
         $this->assertContains(['hook' => 'wp_enqueue_scripts', 'callback'=> [AdCaptcha::class, 'enqueue_scripts'], 'priority' => 9, 'accepted_args' => 1], $mocked_actions);
         $this->assertContains(['hook' => 'wp_enqueue_scripts', 'callback'=> [$this->forms, 'get_success_token_wrapper'], 'priority' => 10, 'accepted_args' => 1], $mocked_actions);

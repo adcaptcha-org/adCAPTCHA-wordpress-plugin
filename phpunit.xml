@@ -14,8 +14,12 @@
     </php>
 
     <testsuites>
+     <testsuite name="Woocommerce Tests">
+        <directory suffix="Test.php">tests/Plugin/Woocommerce</directory>
+    </testsuite>
         <testsuite name="Plugin Test Suite">
             <directory>tests</directory> 
+            <exclude>tests/Plugin/Woocommerce</exclude>
         </testsuite>
     </testsuites>
 </phpunit>
