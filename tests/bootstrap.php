@@ -1,12 +1,14 @@
 <?php
-// tests/bootstrap.php
+require_once __DIR__ . '/../vendor/autoload.php';
 
-// Load Composer's autoload to ensure all dependencies are available.
-require __DIR__ . '/../vendor/autoload.php';
-
-
-
-// Load the test helpers to ensure all mock functions are available for tests.
+require_once __DIR__ . '/../vendor/antecedent/patchwork/Patchwork.php';
+use function Patchwork\replace;
 require __DIR__ . '/test_helpers.php';
 
+// Initialize Patchwork early
+replace('add_action', function (...$args) {
+    return true; 
+});
 
+\Brain\Monkey\setUp();
+\Brain\Monkey\tearDown();
