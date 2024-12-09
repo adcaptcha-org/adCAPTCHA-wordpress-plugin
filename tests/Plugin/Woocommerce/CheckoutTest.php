@@ -18,8 +18,8 @@ use Mockery;
 class CheckoutTest extends TestCase {
 
     private $checkout;
-    private $verifyMock;
     private $isGetOption = true;
+    private $verifyMock;
     
     protected function setUp(): void {
 
@@ -30,26 +30,20 @@ class CheckoutTest extends TestCase {
         $mocked_actions = [];
         $mocked_remove_actions = [];
 
-        // Functions\when('wp_unslash')->justReturn('invalid_token'); 
-        // Functions\when('sanitize_text_field')->justReturn('invalid_token'); 
-        // Functions\when('is_checkout')->justReturn(false);
-        // Functions\when('__')->alias(function ($text, $domain = null) {
-        //     return $text; 
-        // });
+        Functions\when('sanitize_text_field')->justReturn('valid_token'); 
+        Functions\when('wp_unslash')->justReturn('success_token'); 
+        Functions\when('wc_add_notice')->justReturn(true);
+        Functions\when('__')->alias(function ($text, $domain = null) {
+            return $text; 
+        });
         Functions\expect('get_option')
             ->andReturnUsing(function ($option) {
                 $value = $option === 'adcaptcha_wc_checkout_optional_trigger' ? true : false;
                 $this->isGetOption = $value;
                 return $value;
             });
-       
-        $this->checkout = new Checkout();
 
-        // $this->verifyMock = $this->createMock(Verify::class);
-        // $reflection = new \ReflectionClass($this->checkout);
-        // $property = $reflection->getProperty('verify');
-        // $property->setAccessible(true);
-        // $property->setValue($this->checkout, $this->verifyMock);
+        $this->checkout = new Checkout();
     }
 
     protected function tearDown(): void
@@ -78,6 +72,70 @@ class CheckoutTest extends TestCase {
         $this->assertContains(['hook' => 'woocommerce_checkout_process', 'callback' => [$this->checkout, 'verify'], 'priority' => 10, 'accepted_args' => 1 ], $mocked_actions);
     }
 
+    // Testing the 'verify' method to ensure it checks session expiry, calls 'verify_token' with the correct token, sets 'hasVerified' session value, and returns null without errors when the token is valid.
+    public function testVerifySuccessToken() {
+        $this->assertTrue(method_exists($this->checkout, 'verify'), 'Method verify does not exist in the login class');
+
+        $pastTime = date('Y-m-d H:i:s', strtotime('-1 hour'));
+        $sessionMock = Mockery::mock();
+        $sessionMock->shouldReceive('get')
+            ->with('hasVerified')
+            ->andReturn($pastTime);
+        $sessionMock->shouldReceive('set')
+            ->once()
+            ->with('hasVerified', null);
+        $sessionMock->shouldReceive('set')
+            ->once()
+            ->with('hasVerified', Mockery::type('string'));
+    
+        Functions\when('WC')->justReturn((object) ['session' => $sessionMock]);
+        Functions\expect('reset_hasVerified')
+                        ->andReturnTrue();
+
+        $this->verifyMock = $this->createMock(Verify::class);
+        $_POST['adcaptcha_successToken'] = 'valid_token';
+        $reflection = new \ReflectionClass($this->checkout);
+        $property = $reflection->getProperty('verify');
+        $property->setAccessible(true);
+        $property->setValue($this->checkout, $this->verifyMock);
+        $this->verifyMock->method('verify_token')->willReturn(true);
+        $result = $this->checkout->verify();
+
+        $this->assertNull($result, 'Expected null');
+    }
+
+    // Testing that the 'verify' method returns early without further action when 'hasVerified' session value is in the future.
+    public function testVerifyWhenHasVerifiedIsFuture() {
+        $futureTime = date('Y-m-d H:i:s', strtotime('+1 hour'));
+        $sessionMock = Mockery::mock();
+        $sessionMock->shouldReceive('get')
+            ->with('hasVerified')
+            ->andReturn($futureTime);
+        Functions\when('WC')->justReturn((object) ['session' => $sessionMock]);
+        $result = $this->checkout->verify();
+        $this->assertNull($result, 'Expected null');
+    }
+
+    // Test verifies the behavior when token verification fails (verify_token returns false) and 'hasVerified' is false in the session
+    public function testVerifyFailedToken() {
+        $sessionMock = Mockery::mock();
+        $sessionMock->shouldReceive('get')
+            ->with('hasVerified')
+            ->andReturn(false);
+        Functions\when('WC')->justReturn((object) ['session' => $sessionMock]);
+
+        $this->verifyMock = $this->createMock(Verify::class);
+        $_POST['adcaptcha_successToken'] = 'valid_token';
+        $reflection = new \ReflectionClass($this->checkout);
+        $property = $reflection->getProperty('verify');
+        $property->setAccessible(false);
+        $property->setValue($this->checkout, $this->verifyMock);
+        $this->verifyMock->method('verify_token')->willReturn(false);
+
+        $result = $this->checkout->verify();
+        $this->assertNull($result, 'Expected null');
+    }
+
     // Test the reset_hasVerified method to ensure it correctly interacts with the WooCommerce session by calling the 'set' method with the key 'hasVerified' set to null, while verifying that no unintended session methods like 'get' or 'clear' are invoked. Also, confirm that the method exists and is callable.
     public function testResetHasVerified() {
         $this->assertTrue(method_exists($this->checkout, 'reset_hasVerified'), 'Method setup does not exist in the login class');
@@ -96,6 +154,7 @@ class CheckoutTest extends TestCase {
         $this->assertTrue(is_callable([$this->checkout, 'reset_hasVerified']), 'Method reset_hasVerified is not callable');
     }
 
+    // Test checks if the 'init_trigger' method registers and enqueues the script correctly, adds the expected inline script with various elements, and handles session logic based on 'hasVerified' status.
     public function testInitTrigger() {
         $this->assertTrue(method_exists($this->checkout, 'init_trigger'), 'Method init_trigger does not exist in the login class');
         
@@ -159,6 +218,7 @@ class CheckoutTest extends TestCase {
         $this->assertStringContainsString('window.adcap.tmp = { didSubmitTrigger: false };', $capturedInlineScript['data'], 'The inline script does not reset window.adcap.tmp.didSubmitTrigger after form submission.');   
     }
 
+    // Test ensures that the 'block_submission' method correctly adds the inline script with proper form submission handling, token checks, and calls the appropriate methods to prevent form submission when the success token is not present.
     public function testBlockSubmission() {
         $capturedInlineScript = [];
 
