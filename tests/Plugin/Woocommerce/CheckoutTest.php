@@ -158,4 +158,31 @@ class CheckoutTest extends TestCase {
         $this->assertStringContainsString('checkoutForm.submit();', preg_replace('/\s+/', ' ', $capturedInlineScript['data']), 'The inline script does not contain the form submission logic.');
         $this->assertStringContainsString('window.adcap.tmp = { didSubmitTrigger: false };', $capturedInlineScript['data'], 'The inline script does not reset window.adcap.tmp.didSubmitTrigger after form submission.');   
     }
+
+    public function testBlockSubmission() {
+        $capturedInlineScript = [];
+
+        Functions\expect('wp_add_inline_script')
+            ->once()
+            ->andReturnUsing(function ($handle, $data) use (&$capturedInlineScript) {
+                if($handle === 'adcaptcha-script') {
+                    $capturedInlineScript = ['handle' => $handle, 'data' => $data];
+                }
+            });
+
+        Functions\expect('esc_js')
+            ->once()
+            ->andReturn('placement_id');
+
+        $this->checkout->block_submission();
+        $this->assertSame('adcaptcha-script', $capturedInlineScript['handle'], 'The script handle is not as expected.');
+        $this->assertStringContainsString('jQuery(document).ready(function($) {', $capturedInlineScript['data'], 'The inline script does not contain the jQuery document ready block.');
+        $this->assertStringContainsString('var checkoutForm = $("form.checkout");', $capturedInlineScript['data'], 'The inline script does not contain the checkout form initialization.');
+        $this->assertStringContainsString('if (checkoutForm.length) {', $capturedInlineScript['data'], 'The inline script does not contain the form length check.');
+        $this->assertStringContainsString('checkoutForm.on("submit", function(event) {', $capturedInlineScript['data'], 'The inline script does not contain the form submission event listener.');
+        $this->assertStringContainsString('if (!window.adcap.successToken) {', $capturedInlineScript['data'], 'The inline script does not contain the success token check.');
+        $this->assertStringContainsString('event.preventDefault();', $capturedInlineScript['data'], 'The inline script does not contain the preventDefault call for the event.');
+        $this->assertStringContainsString('window.adcap.tmp = { didSubmitTrigger: true };', $capturedInlineScript['data'], 'The inline script does not set window.adcap.tmp.didSubmitTrigger.');
+        $this->assertStringContainsString('window.adcap.handleTriggerClick("placement_id");', $capturedInlineScript['data'], 'The inline script does not call handleTriggerClick with the correct placement_id.');
+    }
 }
