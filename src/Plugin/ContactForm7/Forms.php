@@ -37,7 +37,7 @@ class Forms extends AdCaptchaPlugin {
     
         if ( $response === false ) {
             $spam = true;
-           
+            
             add_filter('wpcf7_display_message', function($message, $status) {
                 if ($status == 'spam') {
                     $message = __( 'Please complete the I am human box', 'adcaptcha' );
