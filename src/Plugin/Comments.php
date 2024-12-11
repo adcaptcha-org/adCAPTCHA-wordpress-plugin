@@ -32,7 +32,7 @@ class Comments extends AdCaptchaPlugin {
 
         $successToken = sanitize_text_field(wp_unslash($_POST['adcaptcha_successToken']));
         $response = $this->verify->verify_token($successToken);
-
+       
         if ( $response === false ) {
             $approved = new WP_Error( 'adcaptcha_error', __( 'Incomplete captcha, Please try again', 'adcaptcha' ), 400 );
             return $approved;
