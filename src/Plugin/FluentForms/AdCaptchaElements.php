@@ -24,7 +24,7 @@ class AdCaptchaElements extends \FluentForm\App\Services\FormBuilder\BaseFieldMa
                 'advanced');
 
                 $this->widgetKey = $this->key;
-                $this->widgetTitle = $this->key;
+                $this->widgetTitle = $this->title;
             } 
             $this->verify = new Verify();
 
