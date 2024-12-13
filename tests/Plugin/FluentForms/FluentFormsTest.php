@@ -19,6 +19,11 @@ class MockBaseFieldManager {
         $this->tags = $tags;
         $this->category = $category;
     }
+
+    protected function printContent($hook, $html, $data, $form)
+    {
+        echo apply_filters($hook, $html, $data, $form); 
+    }
 }
 
 use PHPUnit\Framework\TestCase;
@@ -36,7 +41,9 @@ class FluentFormsTest extends TestCase {
     private $forms;
     private $key = 'adcaptcha_widget';
     private $title = 'adCAPTCHA';
+    private $verifyMock;
     
+    // Set up the test environment, mocking necessary functions and initializing objects for testing.
     protected function setUp(): void {
 
         parent::setUp();
@@ -49,20 +56,30 @@ class FluentFormsTest extends TestCase {
         if (!class_exists('FluentForm\App\Services\FormBuilder\BaseFieldManager')) {
             class_alias(MockBaseFieldManager::class, 'FluentForm\App\Services\FormBuilder\BaseFieldManager');
         }
-
-        // Functions\when('wp_unslash')->justReturn('invalid_token'); 
-        // Functions\when('sanitize_text_field')->justReturn('invalid_token'); 
-        // Functions\when('__')->alias(function ($text) {
-        //     return $text; 
-        // });
+    
+        Functions\when('esc_attr')->alias(function ($text) {
+            return  $text;
+        });
+        Functions\when('get_option')->alias(function ($option_name) {
+            $mock_values = [
+                'adcaptcha_placement_id' => 'mocked-placement-id',
+            ];
+            return $mock_values[$option_name] ?? null;
+        });
+        Functions\when('__')->alias(function ($text, $domain) {
+            return ['error'=> $text, 'domain' => $domain];
+        });
+        Functions\when('fluentform_sanitize_html')->alias(function ($html) {
+            return htmlspecialchars($html, ENT_QUOTES, 'UTF-8');
+        });
     
         $this->forms = new Forms();
         $this->adCaptchaElements = new AdCaptchaElements();
-        // $this->verifyMock = $this->createMock(Verify::class);
-        // $reflection = new \ReflectionClass($this->passwordReset);
-        // $property = $reflection->getProperty('verify');
-        // $property->setAccessible(true);
-        // $property->setValue($this->passwordReset, $this->verifyMock);
+        $this->verifyMock = $this->createMock(Verify::class);
+        $reflection = new \ReflectionClass($this->adCaptchaElements);
+        $property = $reflection->getProperty('verify');
+        $property->setAccessible(true);
+        $property->setValue($this->adCaptchaElements, $this->verifyMock);
     }
 
     protected function tearDown(): void
@@ -133,18 +150,57 @@ class FluentFormsTest extends TestCase {
         $this->assertEquals($expected, $component, 'Expected result does not match');
     }
 
+    // Test that the render method generates the correct HTML output with given data and form.
     public function testRender() {
         $this->assertTrue(method_exists($this->adCaptchaElements, 'render'), 'Method render does not exist');
 
-        // $this->assertTrue(method_exists($this->adCaptchaElements, 'render'), 'Method render does not exist');
-        // $this->assertTrue(method_exists($this->adCaptchaElements, 'render'), 'Method render does not exist');
-        // $this->assertTrue(method_exists($this->adCaptchaElements, 'render'), 'Method render does not exist');
-        // $this->assertTrue(method_exists($this->adCaptchaElements, 'render'), 'Method render does not exist');
-        // $this->assertTrue(method_exists($this->adCaptchaElements, 'render'), 'Method render does not exist');
-        // $this->assertTrue(method_exists($this->adCaptchaElements, 'render'), 'Method render does not exist');
-        // $this->assertTrue(method_exists($this->adCaptchaElements, 'render'), 'Method render does not exist');
-        // $this->assertTrue(method_exists($this->adCaptchaElements, 'render'), 'Method render does not exist');
-        // $this->assertTrue(method_exists($this->adCaptchaElements, 'render'), 'Method render does not exist');
+        $data = [
+            'element' => 'adCAPTCHA',
+            'settings' => [
+                'label' => 'Enter your name',
+                'label_placement' => 'top',
+            ],
+        ];
+
+        $form = [
+            'id' => 1, 
+            'name' => 'Contact Form', 
+        ];
+       
+        ob_start();
+        $this->adCaptchaElements->render($data, $form);
+        $captured_output = ob_get_clean();
+        $decoded_output = htmlspecialchars_decode($captured_output, ENT_QUOTES);
+       
+        $this->assertNotFalse($captured_output, 'Output buffering failed');
+        $this->assertStringContainsString("<div class='ff-el-input--label'><label>Enter your name</label></div><div class='ff-el-input--content'>", $decoded_output);
+        $this->assertStringContainsString('<div data-adcaptcha="mocked-placement-id" style="margin-bottom: 20px; max-width: 400px; width: 100%; outline: none !important;"></div>', $decoded_output);
+        $this->assertStringContainsString('<input type="hidden" class="adcaptcha_successToken" name="adcaptcha_successToken">', $decoded_output);
+        $this->assertStringContainsString("<input type='hidden' class='adcaptcha_successToken' name='adcaptcha_widget'>", $decoded_output);
+    }
+
+    // Test that the render method handles empty data and settings correctly without generating unwanted HTML.
+    public function testRenderNoData() {
+        $data = [
+            'element' => '',
+            'settings' => [
+                'label' => '',
+                'label_placement' => '',
+            ],
+        ];
+
+        $form = [
+            'id' => 1, 
+            'name' => '', 
+        ];
+
+        ob_start();
+        $this->adCaptchaElements->render($data, $form);
+        $captured_output = ob_get_clean();
+        $decoded_output = htmlspecialchars_decode($captured_output, ENT_QUOTES);
+
+        $this->assertStringNotContainsString('ff-el-form-', $decoded_output);
+        $this->assertStringNotContainsString("<div class='ff-el-input--label'><label>", $decoded_output); 
     }
 
     // Checks the existence of renderResponse(), calls it with a valid response, and verifies it returns the expected result
@@ -152,5 +208,31 @@ class FluentFormsTest extends TestCase {
         $this->assertTrue(method_exists($this->adCaptchaElements,'renderResponse'),' Method renderResponse does not exist');
         $result = $this->adCaptchaElements->renderResponse('valid_response', [], null);
         $this->assertEquals('valid_response', $result,' Expected result does not match');
+    }
+
+    // Test that the verify method correctly handles a valid token and does not set an error message.
+    public function testVerifySuccessToken() {
+        $this->assertTrue(method_exists($this->adCaptchaElements,'verify'),' Method verify does not exist');
+
+        $form_data = ['adcaptcha_widget' => 'valid_token'];
+        $error_message = [];
+        $this->verifyMock->method('verify_token')->willReturn(true);
+
+        $result = $this->adCaptchaElements->verify($error_message, null, $form_data, null, null);
+
+        $this->assertEquals($error_message, $result, 'Verify token failed');
+    }
+
+    // Test that the verify method correctly handles an invalid token and sets the appropriate error message.
+    public function testVerifyFailureToken() {
+        $form_data = ['adcaptcha_widget' => 'invalid_token'];
+        $error_message = [];
+        $this->verifyMock->method('verify_token')->willReturn(false);
+
+        $result = $this->adCaptchaElements->verify($error_message, null, $form_data, null, null);
+
+        $this->assertIsArray($result, 'Expected result to be an array');
+        $this->assertEquals('Incomplete captcha, Please try again.', $result[0]['error'], 'Expected error message does not match');
+        $this->assertEquals('adcaptcha', $result[0]['domain'], 'Expected domain does not match');
     }
 }
