@@ -42,36 +42,34 @@ class Forms extends AdCaptchaPlugin {
     }
 
 	public function register_admin_fields() {
-		$this->apply_settings_to_elemntor( 'integrations', static::get_adcaptcha_name(), [
-			'label' => esc_html__( static::get_adcaptcha_name(), 'adcaptcha' ),
-			'callback' => function () {
-				echo sprintf(
-					esc_html__( '%1$sadCAPTCHA%2$s is the first CAPTCHA product which combines technical security features with a brands own media to block Bots and identify human verified users.', 'elementor-pro' ) . '<br><br>',
-					'<a href="https://adcaptcha.com/" target="_blank">',
-					'</a>'
-				);
-				echo sprintf(
-					'<a href="%1$s" class="button" style="display: inline-block; padding: 10px 20px; background-color: #000; color: #fff; text-decoration: none; border-radius: 5px;">%2$s</a>',
-					esc_url('/adcaptcha/wp-admin/options-general.php?page=adcaptcha'),
-					esc_html__('Click to configure adCAPTCHA', 'elementor-pro'),
-				);
-			},
-		] );
-	}
-
-	// We assume this function will always work becaues we trust Elementor
-	public function apply_settings_to_elemntor($sectionName, $settingsName, $settingsObject) {
-		ElementorPlugin::$instance->settings->add_section($sectionName, $sectionName, $settingsObject);
+		ElementorPlugin::$instance->settings->add_section(
+			'integrations', 
+			static::get_adcaptcha_name(), 
+			[
+				'label' => esc_html__( static::get_adcaptcha_name(), 'adcaptcha' ),
+				'callback' => function () {
+					echo sprintf(
+						esc_html__( '%1$sadCAPTCHA%2$s is the first CAPTCHA product which combines technical security features with a brands own media to block Bots and identify human verified users.', 'elementor-pro' ) . '<br><br>',
+						'<a href="https://adcaptcha.com/" target="_blank">',
+						'</a>'
+					);
+					echo sprintf(
+						'<a href="%1$s" class="button" style="display: inline-block; padding: 10px 20px; background-color: #000; color: #fff; text-decoration: none; border-radius: 5px;">%2$s</a>',
+						esc_url('/adcaptcha/wp-admin/options-general.php?page=adcaptcha'),
+						esc_html__('Click to configure adCAPTCHA', 'elementor-pro')
+					);
+				},
+			]
+		);
 	}
 	
-
 	public function reset_captcha_script() {
         wp_add_inline_script( 'adcaptcha-script', 'document.addEventListener("submit", function(event) { ' . AdCaptcha::setupScript() . ' window.adcap.successToken = ""; }, false);' );
     }
 
 	public function render_field( $item, $item_index, $widget ) {
 		$html = '<div style="width: 100%; class="elementor-field" id="form-field-' . $item['custom_id'] . '">';
-
+		
         add_action( 'wp_enqueue_scripts', [ AdCaptcha::class, 'enqueue_scripts' ], 9 );
 		$html .= AdCaptcha::ob_captcha_trigger();
 
