@@ -10,9 +10,11 @@ namespace AdCaptcha\Tests\Plugin\Elementor;
 class MockElementorPlugin {
     public $settings;
     public static $instance;
+    public $controls_manager;
 
     public function __construct() {
         $this->settings = new MockSettings();
+        $this->controls_manager = new MockControlsManager();
     }
 
     public static function instance() {
@@ -34,6 +36,112 @@ class MockSettings {
     }
 }
 
+class MockControlsManager {
+    private $controlStacks = [
+        'my_stack' => [
+            'form_fields' => [
+                'fields' => [
+                    'width' => [
+                        'type' => 'slider', 
+                        'label' => 'Width',
+                        'conditions' => [
+                            'terms' => [], 
+                        ],
+                    ],
+                    'required' => [
+                        'type' => 'checkbox', 
+                        'label' => 'Required',
+                        'conditions' => [
+                            'terms' => [], 
+                        ],
+                    ],
+                ],
+            ],
+        ],
+    ];
+
+    public function get_control_from_stack($stack_name, $control_id) {
+        if (isset($this->controlStacks[$stack_name][$control_id])) {
+            return $this->controlStacks[$stack_name][$control_id];
+        }
+        echo "Control with ID: $control_id not found in stack: $stack_name\n";
+        return null;
+    }
+
+    public function update_control_in_stack($controls_stack, $control_id, $control_data, $options = []) {
+        $stack_name = $controls_stack->get_unique_name();
+        if (isset($this->controlStacks[$stack_name][$control_id])) {
+            $this->controlStacks[$stack_name][$control_id] = $control_data;
+            $terms = $control_data['fields']['width']['conditions']['terms'];
+
+        foreach ($terms as $term) {
+            if (isset($term['name'], $term['operator'], $term['value'])) {
+                echo "Control with ID: $control_id updated in stack: $stack_name\n";
+                echo "Name: " . $term['name'] . ", Operator: " . $term['operator'] . ", Value: " . implode(", ", $term['value']) . "\n";
+            }
+        }
+            } else {
+                echo "Failed to update: Control with ID: $control_id not found in stack: $stack_name\n";
+            }
+    }
+}
+
+class MockControlsStack
+{
+    private $unique_name;
+
+    public function __construct($unique_name)
+    {
+        $this->unique_name = $unique_name;
+    }
+
+    public function get_unique_name()
+    {
+        return 'my_stack';
+    }
+}
+
+class MockRecord {
+    private $fields = [];
+
+    public function set_fields($fields)
+    {
+        $this->fields = $fields;
+    }
+
+    public function get_field($args)
+    {
+        if (isset($args['type']) && $args['type'] === 'adCAPTCHA') {
+            return [['id' => 'test_id', 'name' => 'adcaptcha_field']];
+        }
+        return [];
+    }
+
+    public function remove_field($field_id)
+    {
+        unset($this->fields[$field_id]);
+        echo "remove_field called with field_id: $field_id\n";
+    }
+}
+
+class MockAjaxHandler {
+    private $errors = [];
+
+    public function add_error($field_id, $error_message) {
+        $this->errors[] = [
+            'field_id' => $field_id,
+            'message'  => $error_message,
+        ];
+
+        echo "add_error called with field_id: $field_id, message: $error_message\n";
+    }
+
+    public function get_errors()
+    {
+        return $this->errors;
+    }
+}
+
 use PHPUnit\Framework\TestCase;
 use AdCaptcha\Plugin\Elementor\Forms;
 use AdCaptcha\Widget\AdCaptcha;
@@ -47,9 +155,16 @@ if (!class_exists('Elementor\Plugin')) {
     class_alias(MockElementorPlugin::class, 'Elementor\Plugin');
 }
 
+if(!class_exists('Elementor\Controls_Stack')) {
+    class_alias(MockControlsStack::class, 'Elementor\Controls_Stack');
+}
+
 class ElementorTest extends TestCase {
 
     private $forms;
+    private $verifyMock;
+    private $record;
+    private $ajax_handler;
     
     protected function setUp(): void {
 
@@ -67,11 +182,15 @@ class ElementorTest extends TestCase {
         Functions\when('esc_url')->alias(function ($text) {
             return  $text;
         });
-        // Functions\when('wp_unslash')->justReturn('success_token'); 
-        // Functions\when('wc_add_notice')->justReturn(true);
-        // Functions\when('__')->alias(function ($text, $domain = null) {
-        //     return $text; 
-        // });
+        Functions\when('__')->alias(function ($text, $domain = null) {
+            return $text; 
+        });
+        Functions\when('sanitize_text_field')->alias(function($input) {
+            $sanitized = strip_tags($input); 
+            $sanitized = preg_replace('/[\r\n\t]/', ' ', $sanitized); 
+            $sanitized = trim($sanitized); 
+            return $sanitized;
+        });
         Functions\when('get_option')->alias(function ($option_name) {
             $mock_values = [
                 'adcaptcha_placement_id' => 'mocked-placement-id',
@@ -79,7 +198,16 @@ class ElementorTest extends TestCase {
             return $mock_values[$option_name] ?? null;
         });
 
+        $this->record = new MockRecord();
+        $this->ajax_handler = new MockAjaxHandler();
+
         $this->forms = new Forms();
+
+        $this->verifyMock = $this->createMock(Verify::class);
+        $reflection = new \ReflectionClass($this->forms);
+        $property = $reflection->getProperty('verify');
+        $property->setAccessible(true);
+        $property->setValue($this->forms, $this->verifyMock);
     }
 
     protected function tearDown(): void
@@ -219,5 +347,69 @@ class ElementorTest extends TestCase {
         $this->assertEquals( esc_html__('adCAPTCHA', 'elementor-pro'),$result[$expected_field_name],'The value for the new field is not properly escaped when input array is empty.');
         $this->assertEquals( esc_html__('adCAPTCHA', 'elementor-pro'), 'adCAPTCHA','The value for the new field is not properly escaped.');
         $this->assertTrue(method_exists($this->forms, 'add_field_type'), 'Method add_field_type does not exist in Forms class');
+    }
+
+    public function testUpdateControls() {
+        $this->assertTrue(method_exists($this->forms, 'update_controls'), 'Method update_controls does not exist in Forms class');
+    
+        ob_start();
+        $this->forms->update_controls(new MockControlsStack('unique_name'), []);  
+        $capturedOutput = ob_get_clean();
+
+        $this->assertStringContainsString('Control with ID: form_fields updated in stack: my_stack', $capturedOutput, 'The update_control_in_stack method was not called correctly.');
+        $this->assertStringContainsString('Name: field_type, Operator: !in, Value: adCAPTCHA', $capturedOutput, 'The update_control_in_stack method was not called correctly.');
+    }
+
+    public function testFilterFieldItem() {
+        $this->assertTrue(method_exists($this->forms, 'filter_field_item'), 'Method filter_field_item does not exist in Forms class');
+
+        $item = ['field_type' => 'adCAPTCHA', 'field_label' => 'Test Label'];
+        $item_not_adCAPTCHA = ['field_type' => 'text', 'field_label' => 'Test Label'];
+        $expected = ['field_type' => 'adCAPTCHA', 'field_label' => false];
+
+        $result = $this->forms->filter_field_item($item);
+
+        $this->assertEquals($expected, $result, 'The item is not equal to the expected value.');
+        $this->assertEquals($item_not_adCAPTCHA, $this->forms->filter_field_item($item_not_adCAPTCHA), 'The item is not different to the expected value and return the item as is.');
+        $this->assertEmpty($result['field_label'], 'The field_label should be empty.');
+        $this->assertArrayHasKey('field_type', $result, 'The field_type key is missing.');
+        $this->assertFalse($result['field_label'], 'The field_label should be set to false.');
+        $this->assertTrue(method_exists($this->forms, 'filter_field_item'), 'Method filter_field_item does not exist in Forms class');
+    }
+
+    public function testVerifySuccess() {
+    
+        $this->assertTrue(method_exists($this->forms, 'verify'), 'Method verify does not exist in Forms class');
+
+        Functions\when('wp_unslash')->justReturn('adcaptcha_successToken');
+      
+        $this->verifyMock->method('verify_token')->willReturn(true);
+       
+        ob_start();
+        $this->forms->verify($this->record, $this->ajax_handler);
+        $capturedOutput = ob_get_clean();
+        
+        $this->assertStringContainsString('remove_field called with field_id: test_id', $capturedOutput, 'The remove_field method was not called correctly.');
+    }
+
+    public function testVerifyEmptyToken() {
+        Functions\when('wp_unslash')->justReturn('');
+
+        ob_start();
+        $this->forms->verify($this->record, $this->ajax_handler);
+        $capturedOutput = ob_get_clean();
+
+        $this->assertStringContainsString('add_error called with field_id: test_id, message: Please complete the I am human box', $capturedOutput, 'The add_error method was not called correctly.');
+    }
+
+    public function testVerifyValidTokenFailedVerify() {
+        Functions\when('wp_unslash')->justReturn('Valid_token');
+        $this->verifyMock->method('verify_token')->willReturn(false);
+
+        ob_start();
+        $this->forms->verify($this->record, $this->ajax_handler);
+        $capturedOutput = ob_get_clean();
+
+        $this->assertStringContainsString('add_error called with field_id: test_id, message: Invalid, adCAPTCHA validation failed.', $capturedOutput, 'The add_error method was not called correctly.');
     }
 }

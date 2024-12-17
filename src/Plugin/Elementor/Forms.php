@@ -12,6 +12,12 @@ use ElementorPro\Modules\Forms\Classes\Ajax_Handler;
 use ElementorPro\Modules\Forms\Classes\Form_Record;
 
 class Forms extends AdCaptchaPlugin {
+	private $verify;
+
+    public function __construct() {
+        parent::__construct();
+        $this->verify = new Verify();
+    }
 
 	protected static function get_adcaptcha_name() {
 		return 'adCAPTCHA';
@@ -86,7 +92,9 @@ class Forms extends AdCaptchaPlugin {
 
     public function update_controls( Controls_Stack $controls_stack, array $args ) {
 		$control_id   = 'form_fields';
+		
 		$control_data = $this->helper_func_get_control_from_stack($controls_stack, $control_id);
+		
 		$term = [
 			'name'     => 'field_type',
 			'operator' => '!in',
@@ -149,14 +157,13 @@ class Forms extends AdCaptchaPlugin {
 			return;
 		}
 
-        $response = Verify::verify_token($successToken);
+        $response = $this->verify->verify_token($successToken);
 		
 		if ( $response === false ) {
 			$ajax_handler->add_error( $field['id'], __( 'Invalid, adCAPTCHA validation failed.', 'elementor-pro' ) );
 
 			return;
 		}
-
 		$record->remove_field( $field['id'] );
     }
 }
