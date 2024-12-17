@@ -9,6 +9,12 @@ use AdCaptcha\Plugin\AdCaptchaPlugin;
 use DateTime;
 
 class Checkout extends AdCaptchaPlugin {
+    private $verify;
+
+    public function __construct() {
+        parent::__construct();
+        $this->verify = new Verify();
+    }
 
     public function setup() { 
         add_action( 'wp_enqueue_scripts', [ AdCaptcha::class, 'enqueue_scripts' ] );
@@ -36,14 +42,12 @@ class Checkout extends AdCaptchaPlugin {
 
         $successToken = sanitize_text_field(wp_unslash($_POST['adcaptcha_successToken']));
 
-        $verify = new Verify();
-        $response = $verify->verify_token($successToken);
-
+        $response = $this->verify->verify_token($successToken);
+  
         if ( !$response ) {
             wc_add_notice( __( 'Incomplete captcha, Please try again.', 'adcaptcha' ), 'error' );
             return;
         }
-
         // Add 10 minutes to the current date and time
         $date = new DateTime();
         $date->modify('+10 minutes');

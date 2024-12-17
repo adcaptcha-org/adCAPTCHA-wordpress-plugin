@@ -1,16 +1,4 @@
 <?php
-// tests/test_helpers.php
-
-if (!function_exists('is_admin')) {
-    function is_admin() {
-        global $is_admin;
-        return $is_admin;
-    }
-}
-
-// Add other mock functions here, such as add_action and add_filter
-
-
 if (!function_exists('add_action')) {
     function add_action($hook, $callback, $priority = 10, $accepted_args = 1) {
         global $mocked_actions;
@@ -25,19 +13,38 @@ if (!function_exists('add_filter')) {
     }
 }
 
-function execute_mocked_hook($hook_name) {
-    global $mocked_actions;
-
-    foreach ($mocked_actions as $action) {
-        if ($action['hook'] === $hook_name && is_callable($action['callback'])) {
-            call_user_func($action['callback']);
-        }
-    }
-}
-
 if(!function_exists('remove_action')) {
     function remove_action($hook, $callback, $priority = 10, $accepted_args = 1) {
         global $mocked_remove_actions;
         $mocked_remove_actions[] = compact('hook', 'callback', 'priority', 'accepted_args');
     }
+}
+
+function execute_mocked_hook($hook_name) {
+    global $mocked_actions;
+
+    foreach ($mocked_actions as $action) {
+        if ($action['hook'] === $hook_name) {
+            if (is_callable($action['callback'])) {
+                call_user_func($action['callback']);
+            } else {
+                error_log("Callback for hook {$hook_name} is not callable.");
+            }
+        }
+    }
+}
+
+function check_hook_registration($mocked_hooks, $hook_name, $priority = 10, $accepted_args = 1) {
+    foreach ($mocked_hooks as $hook) {
+        if (
+            isset($hook['hook'], $hook['callback'], $hook['priority'], $hook['accepted_args']) &&
+            $hook['hook'] === $hook_name &&
+            $hook['priority'] === $priority &&
+            $hook['accepted_args'] === $accepted_args &&
+            is_callable($hook['callback'])
+        ) {
+            return true;
+        }
+    }
+    return false;
 }
