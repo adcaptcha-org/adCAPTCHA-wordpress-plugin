@@ -174,7 +174,7 @@ class NinjaFormsTest extends TestCase {
         $this->assertTrue(method_exists($this->forms, 'register_template'), 'Method register_template does not exist');
     }
 
-    // // Tests that `render_field` method exists and returns an array with 'settings' containing an 'adcaptcha' HTML div element.
+    // Tests that `render_field` method exists and returns an array with 'settings' containing an 'adcaptcha' HTML div element.
     public function testRenderField() {
         $field = $this->forms->render_field([]);
       
