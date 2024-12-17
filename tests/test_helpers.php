@@ -34,7 +34,6 @@ function execute_mocked_hook($hook_name) {
     }
 }
 
-// Helper function to check hooks in mocked actions or filters
 function check_hook_registration($mocked_hooks, $hook_name, $priority = 10, $accepted_args = 1) {
     foreach ($mocked_hooks as $hook) {
         if (
