@@ -12,6 +12,12 @@ use ElementorPro\Modules\Forms\Classes\Ajax_Handler;
 use ElementorPro\Modules\Forms\Classes\Form_Record;
 
 class Forms extends AdCaptchaPlugin {
+	private $verify;
+
+    public function __construct() {
+        parent::__construct();
+        $this->verify = new Verify();
+    }
 
 	protected static function get_adcaptcha_name() {
 		return 'adCAPTCHA';
@@ -42,36 +48,34 @@ class Forms extends AdCaptchaPlugin {
     }
 
 	public function register_admin_fields() {
-		$this->apply_settings_to_elemntor( 'integrations', static::get_adcaptcha_name(), [
-			'label' => esc_html__( static::get_adcaptcha_name(), 'adcaptcha' ),
-			'callback' => function () {
-				echo sprintf(
-					esc_html__( '%1$sadCAPTCHA%2$s is the first CAPTCHA product which combines technical security features with a brands own media to block Bots and identify human verified users.', 'elementor-pro' ) . '<br><br>',
-					'<a href="https://adcaptcha.com/" target="_blank">',
-					'</a>'
-				);
-				echo sprintf(
-					'<a href="%1$s" class="button" style="display: inline-block; padding: 10px 20px; background-color: #000; color: #fff; text-decoration: none; border-radius: 5px;">%2$s</a>',
-					esc_url('/adcaptcha/wp-admin/options-general.php?page=adcaptcha'),
-					esc_html__('Click to configure adCAPTCHA', 'elementor-pro'),
-				);
-			},
-		] );
-	}
-
-	// We assume this function will always work becaues we trust Elementor
-	public function apply_settings_to_elemntor($sectionName, $settingsName, $settingsObject) {
-		ElementorPlugin::$instance->settings->add_section($sectionName, $sectionName, $settingsObject);
+		ElementorPlugin::$instance->settings->add_section(
+			'integrations', 
+			static::get_adcaptcha_name(), 
+			[
+				'label' => esc_html__( static::get_adcaptcha_name(), 'adcaptcha' ),
+				'callback' => function () {
+					echo sprintf(
+						esc_html__( '%1$sadCAPTCHA%2$s is the first CAPTCHA product which combines technical security features with a brands own media to block Bots and identify human verified users.', 'elementor-pro' ) . '<br><br>',
+						'<a href="https://adcaptcha.com/" target="_blank">',
+						'</a>'
+					);
+					echo sprintf(
+						'<a href="%1$s" class="button" style="display: inline-block; padding: 10px 20px; background-color: #000; color: #fff; text-decoration: none; border-radius: 5px;">%2$s</a>',
+						esc_url('/adcaptcha/wp-admin/options-general.php?page=adcaptcha'),
+						esc_html__('Click to configure adCAPTCHA', 'elementor-pro')
+					);
+				},
+			]
+		);
 	}
 	
-
 	public function reset_captcha_script() {
         wp_add_inline_script( 'adcaptcha-script', 'document.addEventListener("submit", function(event) { ' . AdCaptcha::setupScript() . ' window.adcap.successToken = ""; }, false);' );
     }
 
 	public function render_field( $item, $item_index, $widget ) {
 		$html = '<div style="width: 100%; class="elementor-field" id="form-field-' . $item['custom_id'] . '">';
-
+		
         add_action( 'wp_enqueue_scripts', [ AdCaptcha::class, 'enqueue_scripts' ], 9 );
 		$html .= AdCaptcha::ob_captcha_trigger();
 
@@ -88,7 +92,11 @@ class Forms extends AdCaptchaPlugin {
 
     public function update_controls( Controls_Stack $controls_stack, array $args ) {
 		$control_id   = 'form_fields';
-		$control_data = $this->helper_func_get_control_from_stack($controls_stack, $control_id);
+		$control_data = ElementorPlugin::$instance->controls_manager->get_control_from_stack(
+			$controls_stack->get_unique_name(),
+			$control_id
+		);
+
 		$term = [
 			'name'     => 'field_type',
 			'operator' => '!in',
@@ -98,25 +106,12 @@ class Forms extends AdCaptchaPlugin {
 		$control_data['fields']['width']['conditions']['terms'][]    = $term;
 		$control_data['fields']['required']['conditions']['terms'][] = $term;
 
-		$this->helper_func_update_control_in_stack($controls_stack, $control_id, $control_data);
-	}
-
-	// Helper function to update control in stack we assume this function will always work becaues we trust Elementor
-	public function helper_func_get_control_from_stack(Controls_Stack $controls_stack, string $control_id) {
-    	return ElementorPlugin::$instance->controls_manager->get_control_from_stack(
-        $controls_stack->get_unique_name(),
-        $control_id
-    	);
-	}
-
-	// Helper function to update control in stack we assume this function will always work becaues we trust Elementor
-	public function helper_func_update_control_in_stack(Controls_Stack $controls_stack, string $control_id, array $control_data) {
-    	ElementorPlugin::$instance->controls_manager->update_control_in_stack(
-        	$controls_stack,
-        	$control_id,
-        	$control_data,
-        	['recursive' => true]
-    	);
+		ElementorPlugin::$instance->controls_manager->update_control_in_stack(
+			$controls_stack,
+			$control_id,
+			$control_data,
+			[ 'recursive' => true ]
+		);
 	}
 
 	public function filter_field_item( $item ) {
@@ -151,14 +146,13 @@ class Forms extends AdCaptchaPlugin {
 			return;
 		}
 
-        $response = Verify::verify_token($successToken);
+        $response = $this->verify->verify_token($successToken);
 		
 		if ( $response === false ) {
 			$ajax_handler->add_error( $field['id'], __( 'Invalid, adCAPTCHA validation failed.', 'elementor-pro' ) );
 
 			return;
 		}
-
 		$record->remove_field( $field['id'] );
     }
 }
