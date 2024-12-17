@@ -92,9 +92,11 @@ class Forms extends AdCaptchaPlugin {
 
     public function update_controls( Controls_Stack $controls_stack, array $args ) {
 		$control_id   = 'form_fields';
-		
-		$control_data = $this->helper_func_get_control_from_stack($controls_stack, $control_id);
-		
+		$control_data = ElementorPlugin::$instance->controls_manager->get_control_from_stack(
+			$controls_stack->get_unique_name(),
+			$control_id
+		);
+
 		$term = [
 			'name'     => 'field_type',
 			'operator' => '!in',
@@ -104,25 +106,12 @@ class Forms extends AdCaptchaPlugin {
 		$control_data['fields']['width']['conditions']['terms'][]    = $term;
 		$control_data['fields']['required']['conditions']['terms'][] = $term;
 
-		$this->helper_func_update_control_in_stack($controls_stack, $control_id, $control_data);
-	}
-
-	// Helper function to update control in stack we assume this function will always work becaues we trust Elementor
-	public function helper_func_get_control_from_stack(Controls_Stack $controls_stack, string $control_id) {
-    	return ElementorPlugin::$instance->controls_manager->get_control_from_stack(
-        $controls_stack->get_unique_name(),
-        $control_id
-    	);
-	}
-
-	// Helper function to update control in stack we assume this function will always work becaues we trust Elementor
-	public function helper_func_update_control_in_stack(Controls_Stack $controls_stack, string $control_id, array $control_data) {
-    	ElementorPlugin::$instance->controls_manager->update_control_in_stack(
-        	$controls_stack,
-        	$control_id,
-        	$control_data,
-        	['recursive' => true]
-    	);
+		ElementorPlugin::$instance->controls_manager->update_control_in_stack(
+			$controls_stack,
+			$control_id,
+			$control_data,
+			[ 'recursive' => true ]
+		);
 	}
 
 	public function filter_field_item( $item ) {

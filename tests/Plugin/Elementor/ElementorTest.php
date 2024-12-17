@@ -217,6 +217,7 @@ class ElementorTest extends TestCase {
         parent::tearDown();
     }
 
+    // Testing that the get_adcaptcha_name method returns the correct 'adCAPTCHA' value and is protected.
     public function testGetAdCaptchaName() {
         $this->assertTrue(method_exists($this->forms, 'get_adcaptcha_name'), 'Method get_adcaptcha_name does not exist in the login class');
         $reflectionMethod = new ReflectionMethod(Forms::class, 'get_adcaptcha_name');
@@ -226,6 +227,7 @@ class ElementorTest extends TestCase {
         $this->assertEquals('adCAPTCHA', $result);
     }
 
+    // Testing that the get_setup_message method returns the correct setup message from esc_html__ function.
     public function testGetSetupMessage() {
         Functions\when('esc_html__')->justReturn('Please enter your adCAPTCHA API Key and Placement ID in the adCAPTCHA settings.');
         $result = $this->forms->get_setup_message();
@@ -234,6 +236,7 @@ class ElementorTest extends TestCase {
         $this->assertTrue(method_exists($this->forms, 'get_setup_message'), 'Method get_setup_message does not exist in Forms class'); 
     }
 
+    // Testing that the setup method correctly registers all required actions and filters for the Forms class.
     public function testSetup() {
         $this->assertTrue(method_exists($this->forms, 'setup'), 'Method setup does not exist in Forms class'); 
         
@@ -260,6 +263,7 @@ class ElementorTest extends TestCase {
         $this->assertContains(['hook' => 'elementor/admin/after_create_settings/elementor','callback' => [$this->forms, 'register_admin_fields'],'priority' => 10, 'accepted_args' => 1], $mocked_actions, 'The admin/after_create_settings/elementor action is not registered correctly.');
     }
 
+    // Testing that the register_admin_fields method correctly registers the admin fields, adds sections, and outputs the expected HTML and section arguments.
     public function testRegisterAdminFields() {
         $this->assertTrue(method_exists($this->forms, 'register_admin_fields'), 'Method setup does not exist in Forms class'); 
         Functions\when('esc_html__')->alias(function ($text, $text_domain) {
@@ -277,6 +281,7 @@ class ElementorTest extends TestCase {
         $this->assertStringContainsString('<a href="/adcaptcha/wp-admin/options-general.php?page=adcaptcha" class="button" style="display: inline-block; padding: 10px 20px; background-color: #000; color: #fff; text-decoration: none; border-radius: 5px;">Click to configure adCAPTCHA (text-domain: elementor-pro)</a>', $capturedOutput, 'The second echo statement is not correct.');
     }
 
+    // Testing that the reset_captcha_script method correctly registers the inline script with the expected handle and script content.
     public function testResetCaptchaScript() {
         $this->assertTrue(method_exists($this->forms, 'reset_captcha_script'), 'Method reset_captcha_script does not exist in Forms class');
 
@@ -294,6 +299,7 @@ class ElementorTest extends TestCase {
         $this->assertEquals($normalizedExpected, $normalizedCaptured, 'The inline script is not correct.');
     }
 
+    // Testing that the render_field method correctly outputs the field HTML and registers the necessary enqueue_scripts action.
     public function testRenderField() {
         $this->assertTrue(method_exists($this->forms, 'render_field'), 'Method render_field does not exist in Forms class');
 
@@ -330,6 +336,7 @@ class ElementorTest extends TestCase {
         );
     }
 
+    // Testing that the add_field_type method correctly adds new field types and preserves existing ones, while ensuring proper escaping.
     public function testAddFieldType() {
         $field_types = ['text' => 'Text Field', 'number' => 'Number Field'];
         Functions\when('esc_html__')->alias(function ($text, $text_domain = null) {
@@ -349,6 +356,7 @@ class ElementorTest extends TestCase {
         $this->assertTrue(method_exists($this->forms, 'add_field_type'), 'Method add_field_type does not exist in Forms class');
     }
 
+    // Testing that the update_controls method correctly updates the control and outputs the expected information.
     public function testUpdateControls() {
         $this->assertTrue(method_exists($this->forms, 'update_controls'), 'Method update_controls does not exist in Forms class');
     
@@ -360,6 +368,7 @@ class ElementorTest extends TestCase {
         $this->assertStringContainsString('Name: field_type, Operator: !in, Value: adCAPTCHA', $capturedOutput, 'The update_control_in_stack method was not called correctly.');
     }
 
+    // Testing that the filter_field_item method correctly modifies the item based on the field_type and ensures the expected output.
     public function testFilterFieldItem() {
         $this->assertTrue(method_exists($this->forms, 'filter_field_item'), 'Method filter_field_item does not exist in Forms class');
 
@@ -377,8 +386,8 @@ class ElementorTest extends TestCase {
         $this->assertTrue(method_exists($this->forms, 'filter_field_item'), 'Method filter_field_item does not exist in Forms class');
     }
 
+    // Testing that the remove_field method is called with the correct parameters when the token is valid and verification succeeds.
     public function testVerifySuccess() {
-    
         $this->assertTrue(method_exists($this->forms, 'verify'), 'Method verify does not exist in Forms class');
 
         Functions\when('wp_unslash')->justReturn('adcaptcha_successToken');
@@ -392,6 +401,7 @@ class ElementorTest extends TestCase {
         $this->assertStringContainsString('remove_field called with field_id: test_id', $capturedOutput, 'The remove_field method was not called correctly.');
     }
 
+    // Testing that the add_error method is called with the correct parameters when the token is empty.
     public function testVerifyEmptyToken() {
         Functions\when('wp_unslash')->justReturn('');
 
@@ -402,6 +412,7 @@ class ElementorTest extends TestCase {
         $this->assertStringContainsString('add_error called with field_id: test_id, message: Please complete the I am human box', $capturedOutput, 'The add_error method was not called correctly.');
     }
 
+    // Testing that the add_error method is called with the correct parameters when the token verification fails.
     public function testVerifyValidTokenFailedVerify() {
         Functions\when('wp_unslash')->justReturn('Valid_token');
         $this->verifyMock->method('verify_token')->willReturn(false);
