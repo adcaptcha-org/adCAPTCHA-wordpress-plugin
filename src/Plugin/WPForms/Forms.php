@@ -17,8 +17,6 @@ class Forms extends AdCaptchaPlugin {
 
         public function setup() {
             add_action('plugins_loaded', function() {
-                // this line removed because it is using composer autoloader
-                // require_once plugin_dir_path(__FILE__) . '/AdCAPTCHA_WPForms_Field.php';
                 new AdCAPTCHA_WPForms_Field();
                 add_action( 'wp_enqueue_scripts', [ AdCaptcha::class, 'enqueue_scripts' ]);
                 add_action( 'wp_enqueue_scripts', [ Verify::class, 'get_success_token' ] );
