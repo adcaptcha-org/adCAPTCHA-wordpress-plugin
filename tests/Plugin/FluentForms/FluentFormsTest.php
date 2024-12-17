@@ -104,7 +104,7 @@ class FluentFormsTest extends TestCase {
             $this->assertTrue(check_hook_registration($mocked_actions, 'fluentform/loaded'), 'fluentform/loaded hook not registered');
     }
 
-     // Verifies existence of __construct(), checks that expected actions and filters are registered with correct hooks, callbacks, priorities, and argument counts
+     // Verifies existence of __construct(), checks that expected actions and filters are registered with correct hooks, callbacks, priorities, and argument counts.
      public function testConstructor():void {
         global $mocked_actions, $mocked_filters;
         $this->assertTrue(method_exists($this->adCaptchaElements, '__construct'), 'Method __construct does not exist');
