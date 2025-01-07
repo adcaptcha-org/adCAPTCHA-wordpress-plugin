@@ -271,7 +271,9 @@ class WPFormsTest extends TestCase {
         $this->verifyMock->method('verify_token')->willReturn(false);
 
         $mockErrors = [];
-        define('ADCAPTCHA_ERROR_MESSAGE', 'Please complete the I am human box.');
+        if (!defined('ADCAPTCHA_ERROR_MESSAGE')) {
+            define('ADCAPTCHA_ERROR_MESSAGE', 'Please complete the I am human box.');
+        }
        
         $mockProcess = Mockery::mock();
         $mockProcess->errors = &$mockErrors; 
