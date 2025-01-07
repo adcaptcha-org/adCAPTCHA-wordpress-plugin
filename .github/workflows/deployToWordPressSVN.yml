@@ -8,7 +8,17 @@ jobs:
     name: New Release of adCAPTCHA WordPress Plugin
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@master
+    - name: Checkout
+      uses: actions/checkout@master
+
+    - name: Set up PHP
+      uses: "shivammathur/setup-php@v2"
+      with:
+        php-version: "7.4"
+
+    - name: Install Composer Dependencies
+      run: composer install --no-dev --optimize-autoloader
+
     - name: WordPress Plugin Deploy
       uses: 10up/action-wordpress-plugin-deploy@stable
       env:
