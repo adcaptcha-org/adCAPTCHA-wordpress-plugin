@@ -1,6 +1,6 @@
 {
     "name": "adcaptcha/plugin",
-    "description": "adcaptcha wordpress plugin",
+    "description": "adCAPTCHA wordpress plugin",
     "type": "wordpress-plugin",
     "scripts": {
         "test": "phpunit"
