@@ -1,27 +1,39 @@
 <?php
 /**
- * WordpressForms RegistrationTest
+ * Wordpress Registration Test
  * 
  * @package AdCaptcha
  */
 
-namespace AdCaptcha\Tests\Plugin\WordpressForms;
+namespace AdCaptcha\Tests\Plugin;
 
 use PHPUnit\Framework\TestCase;
+use AdCaptcha\Plugin\Registration;
 use AdCaptcha\Widget\AdCaptcha;
 use AdCaptcha\Widget\Verify;
-use AdCaptcha\Plugin\Registration;
 use AdCaptcha\Plugin\AdcaptchaPlugin;
+use Brain\Monkey;
+use Brain\Monkey\Functions;
+use Mockery;
+use Tests\Mocks\WPErrorMock;
 
 class RegistrationTest extends TestCase {
+
     private $registration;
     private $verifyMock;
+    
+    protected function setUp(): void {
 
-    // Set up function to prepare mock objects and inject dependencies. Calls the parent setup method to initialize the test environment. Defines a global variable for mocked actions to track calls. Creates a mock instance of the Verify class for testing. Initializes a new Registration instance for testing. Uses reflection to access and modify private properties. Sets the 'verify' property of Registration to use the mock Verify instance
-    public function setUp(): void {
         parent::setUp();
-        global $mocked_actions;
+        Monkey\setUp();
+
+        global $mocked_actions, $mocked_filters;
         $mocked_actions = [];
+        $mocked_filters = [];
+
+        Functions\when('wp_unslash')->justReturn('invalid_token'); 
+        Functions\when('sanitize_text_field')->justReturn('invalid_token'); 
+        Functions\when('__')->justReturn('Incomplete captcha, Please try again');
 
         $this->verifyMock = $this->createMock(Verify::class);
         $this->registration = new Registration(); 
@@ -29,17 +41,17 @@ class RegistrationTest extends TestCase {
         $reflection = new \ReflectionClass($this->registration);
         $property = $reflection->getProperty('verify');
         $property->setAccessible(true);
-        $property->setValue($this->registration, $this->verifyMock);   
+        $property->setValue($this->registration, $this->verifyMock);
     }
 
-    // Resets the global mocked actions array; calls parent teardown to clean up the test environment.
-    public function tearDown(): void {
-        global $mocked_actions;
-        $mocked_actions = [];
+    protected function tearDown(): void
+    {
+        Mockery::close();
+        Monkey\tearDown();
         parent::tearDown();
     }
 
-    // Checks that the Registration class has a ‘setup’ method. Calls setup on Registration and verifies global mocked actions. Confirms that expected actions (register_form and registration_errors hooks with associated callbacks) are present in mocked actions, each with specified callback, priority, and accepted arguments.
+    // Test that the Login class correctly registers all expected actions and hooks. 
     public function testSetup() {
         $this->assertTrue(method_exists($this->registration, 'setup'), 'Method setup does not exist');
 
@@ -59,38 +71,34 @@ class RegistrationTest extends TestCase {
         $this->assertInstanceof(AdcaptchaPlugin::class, $this->registration , 'Expected an instance of AdCaptchaPlugin');
     }
 
-    // Checks that the Registration class has a ‘verify’ method and that it’s callable. Sets an expectation for verify_token to return true once. Creates a WP_Error object for error tracking. Calls verify on Registration and asserts the result is a WP_Error instance with no error codes (indicating verification success).
-    public function testVerifySuccess() {
+     // Test that the verify method successfully validates and returns a WP_Error instance without errors.
+     public function testVerifySuccess() {
         $this->assertTrue(method_exists($this->registration, 'verify'), 'Method verify does not exist');
         $this->assertTrue(is_callable([$this->registration, 'verify']), 'Method verify is not callable');
 
         $this->verifyMock->expects($this->once())
             ->method('verify_token')
             ->willReturn(true);
-
-        $errors = new \WP_Error();
-        $result = $this->registration->verify($errors);
-
-        $this->assertInstanceof(\WP_Error::class, $result, 'Expected an instance of WP_Error');
-        $this->assertEmpty($result->get_error_codes(), 'Expected no errors');
+    
+        $wpMock = new WPErrorMock();
+        $result = $this->registration->verify($wpMock, ['comment_post_ID' => 1]);
+    
+        $this->assertInstanceOf(WPErrorMock::class, $result, 'Expected result to be an instance of WP_Error');
+        $this->assertEmpty($result->get_error_codes(), 'Expected WP_Error to have no error codes');
     }
 
-    // Tests verify method when verification fails. Sets expectation for verify_token to return false once. Initializes WP_Error for error tracking. Calls verify on Registration and checks result is a WP_Error with error codes. Asserts ‘adcaptcha_error’ code exists and its message matches ‘Incomplete captcha, Please try again.’
-    public function testVerifyFailure() {
-        $this->verifyMock->expects($this->once())
-            ->method('verify_token')
-            ->willReturn(false);
+     // Test that the verify method fails validation and returns a WP_Error instance with the expected error code and message.
+     public function testVerifyFailure() {
+        $_POST['adcaptcha_successToken'] = 'invalid_token';
+        $mockedError = Mockery::mock('overload:WP_Error');
+        $mockedError->shouldReceive('get_error_code')->andReturn('adcaptcha_error');
+        $mockedError->shouldReceive('get_error_message')->andReturn('Incomplete captcha, Please try again.');
+        
+        $this->verifyMock->method('verify_token')->willReturn(false);
 
-        $errors = new \WP_Error();
-        $result = $this->registration->verify($errors);
-
-        $this->assertInstanceof(\WP_Error::class, $result, 'Expected an instance of WP_Error');
-        $this->assertNotEmpty($result->get_error_codes(), 'Expected errors');
-
-        $errorCodes = $result->get_error_codes();
-
-        $this->assertContains('adcaptcha_error', $errorCodes, 'Expected error code not found');
-
-        $this->assertEquals('Incomplete captcha, Please try again.', $result->get_error_message('adcaptcha_error'));
+        $result = $this->registration->verify(null, ['comment_post_ID' => 1]);
+        $this->assertInstanceOf(\WP_Error::class, $result, 'Expected result to be an instance of WP_Error');
+        $this->assertEquals('adcaptcha_error', $result->get_error_code(), 'Expected error code to be adcaptcha_error');
+        $this->assertEquals('Incomplete captcha, Please try again.', $result->get_error_message(), 'Expected error message to be Incomplete captcha, Please try again.');
     }
 }

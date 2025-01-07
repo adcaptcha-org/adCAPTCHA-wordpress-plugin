@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ccf2163b8fb669c77315c2fbd31465fe",
+    "content-hash": "e9f77ce85b66af4341455f70cdb16bad",
     "packages": [],
     "packages-dev": [
         {
@@ -99,6 +99,77 @@
                 "source": "https://github.com/antecedent/patchwork/tree/2.2.0"
             },
             "time": "2024-09-27T16:59:55+00:00"
+        },
+        {
+            "name": "brain/monkey",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Brain-WP/BrainMonkey.git",
+                "reference": "d95a9d895352c30f47604ad1b825ab8fa9d1a373"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Brain-WP/BrainMonkey/zipball/d95a9d895352c30f47604ad1b825ab8fa9d1a373",
+                "reference": "d95a9d895352c30f47604ad1b825ab8fa9d1a373",
+                "shasum": ""
+            },
+            "require": {
+                "antecedent/patchwork": "^2.1.17",
+                "mockery/mockery": "^1.3.5 || ^1.4.4",
+                "php": ">=5.6.0"
+            },
+            "require-dev": {
+                "dealerdirect/phpcodesniffer-composer-installer": "^0.7.1",
+                "phpcompatibility/php-compatibility": "^9.3.0",
+                "phpunit/phpunit": "^5.7.26 || ^6.0 || ^7.0 || >=8.0 <8.5.12 || ^8.5.14 || ^9.0"
+            },
+            "default-branch": true,
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-version/1": "1.x-dev",
+                    "dev-master": "2.x-dev"
+                }
+            },
+            "autoload": {
+                "files": [
+                    "inc/api.php"
+                ],
+                "psr-4": {
+                    "Brain\\Monkey\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Giuseppe Mazzapica",
+                    "email": "giuseppe.mazzapica@gmail.com",
+                    "homepage": "https://gmazzap.me",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Mocking utility for PHP functions and WordPress plugin API",
+            "keywords": [
+                "Monkey Patching",
+                "interception",
+                "mock",
+                "mock functions",
+                "mockery",
+                "patchwork",
+                "redefinition",
+                "runkit",
+                "test",
+                "testing"
+            ],
+            "support": {
+                "issues": "https://github.com/Brain-WP/BrainMonkey/issues",
+                "source": "https://github.com/Brain-WP/BrainMonkey"
+            },
+            "time": "2024-08-29T20:15:04+00:00"
         },
         {
             "name": "hamcrest/hamcrest-php",
@@ -806,12 +877,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "3c9545d1a7d8102c98da681f7143172367b378ab"
+                "reference": "7976d5649c0a5aa6a3c3a104ae385cc8614b34b9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/3c9545d1a7d8102c98da681f7143172367b378ab",
-                "reference": "3c9545d1a7d8102c98da681f7143172367b378ab",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/7976d5649c0a5aa6a3c3a104ae385cc8614b34b9",
+                "reference": "7976d5649c0a5aa6a3c3a104ae385cc8614b34b9",
                 "shasum": ""
             },
             "require": {
@@ -899,7 +970,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-11-26T07:55:38+00:00"
+            "time": "2024-11-30T13:47:15+00:00"
         },
         {
             "name": "sebastian/cli-parser",
@@ -1945,7 +2016,9 @@
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
-        "mockery/mockery": 20
+        "brain/monkey": 20,
+        "mockery/mockery": 20,
+        "phpunit/phpunit": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,

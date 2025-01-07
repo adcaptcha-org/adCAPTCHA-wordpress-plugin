@@ -10,7 +10,6 @@ class Forms extends AdCaptchaPlugin {
 
     public function setup() {
 		add_action('plugins_loaded', function() {
-			require_once plugin_dir_path(__FILE__) . '/AdCaptchaField.php';
 			add_action( 'wp_enqueue_scripts', [ AdCaptcha::class, 'enqueue_scripts' ]);
 			add_action( 'wp_enqueue_scripts', [ $this, 'load_scripts' ] );
 			add_filter( 'ninja_forms_register_fields', [ $this, 'register_field' ] );
