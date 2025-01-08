@@ -27,7 +27,7 @@ class Plugins {
                 'label' => 'Mailchimp',
                 'logo' => 'mailchimp_logo.png',
                 'options' => array('Forms'),
-                'message' => array('For manual integration, see the', 'documentation.', 'https://docs.adcaptcha.com/wordpress/contactform7')
+                'message' => array('For manual integration, see the', 'documentation.', 'https://docs.adcaptcha.com/wordpress/mailchimp')
             ),
             array(
                 'label' => 'NinjaForms',
