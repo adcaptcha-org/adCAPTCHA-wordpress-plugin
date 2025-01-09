@@ -1,30 +1,37 @@
 <?php
 
-namespace AdCaptcha\Plugin\FluentForms\AdCaptchaElement;
+namespace AdCaptcha\Plugin\FluentForms;
 
-use AdCaptcha\Widget\AdCaptcha\AdCaptcha;
-use AdCaptcha\Widget\Verify\Verify;
+use AdCaptcha\Widget\AdCaptcha;
+use AdCaptcha\Widget\Verify;
+use PhpParser\Error;
 
-class AdCaptchaElement extends \FluentForm\App\Services\FormBuilder\BaseFieldManager {
-
+class AdCaptchaElements extends \FluentForm\App\Services\FormBuilder\BaseFieldManager {
     /**
      * Constructor
      *
      * @return void
      */
-    public function __construct() {
-        parent::__construct(
-            'adcaptcha_widget',  // Changed to match adCAPTCHA response key
-            'adCAPTCHA',            // Title set to adCAPTCHA
-            [ 'captcha' ],
-            'advanced'
-        );
+    private $verify;
+    private $widgetKey = 'adcaptcha_widget';
+    private $widgetTitle = 'adCAPTCHA';
+
+    public function __construct($shouldInstantiateParent = true) {
+            if ($shouldInstantiateParent === true) {
+                parent::__construct('adcaptcha_widget',  
+                'adCAPTCHA',            
+                [ 'captcha' ],
+                'advanced');
+
+                $this->widgetKey = $this->key;
+                $this->widgetTitle = $this->title;
+            } 
+            $this->verify = new Verify();
 
         add_action( 'wp_enqueue_scripts', [ AdCaptcha::class, 'enqueue_scripts' ], 9 );
         add_action( 'wp_enqueue_scripts', [ Verify::class, 'get_success_token' ] );
-        // Updated filters to use adCAPTCHA
-        add_filter( 'fluentform/response_render_' . $this->key, [ $this, 'renderResponse' ], 10, 3 );
-        add_filter( 'fluentform/validate_input_item_' . $this->key, [ $this, 'verify' ], 10, 5 );
+        add_filter( 'fluentform/response_render_' . $this->widgetKey, [ $this, 'renderResponse' ], 10, 3 );
+        add_filter( 'fluentform/validate_input_item_' . $this->widgetKey, [ $this, 'verify' ], 10, 5 );
     }
 
     /**
@@ -35,16 +42,16 @@ class AdCaptchaElement extends \FluentForm\App\Services\FormBuilder\BaseFieldMan
     public function getComponent() {
         return [
             'index'          => 16,
-            'element'        => $this->key,
+            'element'        => $this->widgetKey,
             'attributes'     => [
-                'name' => $this->key,
+                'name' => $this->widgetKey,
             ],
             'settings'       => [
                 'label'            => '',
                 'validation_rules' => [],
             ],
             'editor_options' => [
-                'title'      => $this->title,
+                'title'      => $this->widgetTitle,
                 'icon_class' => 'ff-edit-adcaptcha',
                 'template'   => 'inputHidden',
             ],
@@ -61,27 +68,20 @@ class AdCaptchaElement extends \FluentForm\App\Services\FormBuilder\BaseFieldMan
     public function render( $data, $form ) {
         $element_name = $data['element'];
         $settings = $data['settings'];
-
-        // Handle optional label for captcha field
         $label = '';
         if ( ! empty( $settings['label'] ) ) {
             $label = "<div class='ff-el-input--label'><label>" . $settings['label'] . '</label></div>';
         }
-
-        // Optional container class for label placement
         $container_class = '';
         if ( ! empty( $settings['label_placement'] ) ) {
             $container_class = 'ff-el-form-' . $settings['label_placement'];
         }
-
-        // Use AdCaptcha to build the HTML for the captcha hidden input
         $adcaptcha = AdCaptcha::ob_captcha_trigger();
-
-        // Render the final captcha HTML element
+   
         $el = "<div class='ff-el-input--content'>{$adcaptcha}<input type='hidden' class='adcaptcha_successToken' name='adcaptcha_widget'></div>";
+
         $html = "<div class='ff-el-group " . esc_attr( $container_class ) . "' >" . fluentform_sanitize_html( $label ) . "{$el}</div>";
 
-        // Print the final content to Fluent Forms
         $this->printContent( 'fluentform/rendering_field_html_' . $element_name, $html, $data, $form );
     }
 
@@ -94,7 +94,7 @@ class AdCaptchaElement extends \FluentForm\App\Services\FormBuilder\BaseFieldMan
      * @return string
      */
     public function renderResponse( $response, $field, $form_id ) {
-        return $response;  // No changes needed, the response is returned as-is
+        return $response;  
     }
 
 	/**
@@ -109,8 +109,7 @@ class AdCaptchaElement extends \FluentForm\App\Services\FormBuilder\BaseFieldMan
 	 */
     public function verify( $error_message, $field, $form_data, $fields, $form ) {
         $successToken = $form_data['adcaptcha_widget'];
-        $verify = new Verify();
-        $response = $verify->verify_token($successToken);
+        $response = $this->verify->verify_token($successToken);
 
         if ( $response === false ) {
             $error_message = [ __( 'Incomplete captcha, Please try again.', 'adcaptcha' ) ];

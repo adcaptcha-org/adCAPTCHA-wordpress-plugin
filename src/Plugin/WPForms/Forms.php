@@ -1,17 +1,22 @@
 <?php
 
-namespace AdCaptcha\Plugin\WPForms\Froms;
+namespace AdCaptcha\Plugin\WPForms;
 
-use AdCaptcha\Plugin\WPForms\AdCAPTCHA_WPForms_Field\AdCAPTCHA_WPForms_Field;
-use AdCaptcha\Widget\AdCaptcha\AdCaptcha;
-use AdCaptcha\Widget\Verify\Verify;
-use AdCaptcha\AdCaptchaPlugin\AdCaptchaPlugin;
+use AdCaptcha\Plugin\WPForms\AdCAPTCHA_WPForms_Field;
+use AdCaptcha\Widget\AdCaptcha;
+use AdCaptcha\Widget\Verify;
+use AdCaptcha\Plugin\AdCaptchaPlugin;
 
 class Forms extends AdCaptchaPlugin {
+        private $verify;
+
+        public function __construct() {
+            parent::__construct();
+            $this->verify = new Verify();
+        }
 
         public function setup() {
             add_action('plugins_loaded', function() {
-                require_once plugin_dir_path(__FILE__) . '/AdCAPTCHA_WPForms_Field.php';
                 new AdCAPTCHA_WPForms_Field();
                 add_action( 'wp_enqueue_scripts', [ AdCaptcha::class, 'enqueue_scripts' ]);
                 add_action( 'wp_enqueue_scripts', [ Verify::class, 'get_success_token' ] );
@@ -71,9 +76,9 @@ class Forms extends AdCaptchaPlugin {
 
         public function verify( array $fields, array $entry, array $form_data ) {
             $successToken = sanitize_text_field(wp_unslash($_POST['adcaptcha_successToken']));
-            $verify = new Verify();
-            $response = $verify->verify_token($successToken);
-    
+            
+            $response = $this->verify->verify_token($successToken);
+            
             if ( $response === false ) {
                 wpforms()->get( 'process' )->errors[ $form_data['id'] ]['footer'] = __( ADCAPTCHA_ERROR_MESSAGE );
             }

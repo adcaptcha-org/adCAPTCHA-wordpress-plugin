@@ -1,6 +1,6 @@
 <?php
 
-namespace AdCaptcha\AdCaptchaPlugin;
+namespace AdCaptcha\Plugin;
 
 abstract class AdCaptchaPlugin {
 

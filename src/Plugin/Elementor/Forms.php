@@ -1,10 +1,10 @@
 <?php
 
-namespace AdCaptcha\Plugin\Elementor\Forms;
+namespace AdCaptcha\Plugin\Elementor;
 
-use AdCaptcha\Widget\AdCaptcha\AdCaptcha;
-use AdCaptcha\Widget\Verify\Verify;
-use AdCaptcha\AdCaptchaPlugin\AdCaptchaPlugin;
+use AdCaptcha\Widget\AdCaptcha;
+use AdCaptcha\Widget\Verify;
+use AdCaptcha\Plugin\AdCaptchaPlugin;
 
 use Elementor\Controls_Stack;
 use Elementor\Plugin as ElementorPlugin;
@@ -12,6 +12,12 @@ use ElementorPro\Modules\Forms\Classes\Ajax_Handler;
 use ElementorPro\Modules\Forms\Classes\Form_Record;
 
 class Forms extends AdCaptchaPlugin {
+	private $verify;
+
+    public function __construct() {
+        parent::__construct();
+        $this->verify = new Verify();
+    }
 
 	protected static function get_adcaptcha_name() {
 		return 'adCAPTCHA';
@@ -36,36 +42,40 @@ class Forms extends AdCaptchaPlugin {
 		add_action( 'elementor/preview/enqueue_scripts', [ AdCaptcha::class, 'enqueue_scripts' ] );
         add_action( 'wp_enqueue_scripts', [ Verify::class, 'get_success_token' ] );
         add_action( 'elementor_pro/forms/validation', [ $this, 'verify' ], 10, 2 );
-		if ( is_admin() ) {
+		if ( \is_admin() ) {
 			add_action( 'elementor/admin/after_create_settings/' . 'elementor', [ $this, 'register_admin_fields' ] );
 		}
     }
 
 	public function register_admin_fields() {
-		ElementorPlugin::$instance->settings->add_section( 'integrations', static::get_adcaptcha_name(), [
-			'label' => esc_html__( static::get_adcaptcha_name(), 'adcaptcha' ),
-			'callback' => function () {
-				echo sprintf(
-					esc_html__( '%1$sadCAPTCHA%2$s is the first CAPTCHA product which combines technical security features with a brands own media to block Bots and identify human verified users.', 'elementor-pro' ) . '<br><br>',
-					'<a href="https://adcaptcha.com/" target="_blank">',
-					'</a>'
-				);
-				echo sprintf(
-					'<a href="%1$s" class="button" style="display: inline-block; padding: 10px 20px; background-color: #000; color: #fff; text-decoration: none; border-radius: 5px;">%2$s</a>',
-					esc_url('/adcaptcha/wp-admin/options-general.php?page=adcaptcha'),
-					esc_html__('Click to configure adCAPTCHA', 'elementor-pro'),
-				);
-			},
-		] );
+		ElementorPlugin::$instance->settings->add_section(
+			'integrations', 
+			static::get_adcaptcha_name(), 
+			[
+				'label' => esc_html__( static::get_adcaptcha_name(), 'adcaptcha' ),
+				'callback' => function () {
+					echo sprintf(
+						esc_html__( '%1$sadCAPTCHA%2$s is the first CAPTCHA product which combines technical security features with a brands own media to block Bots and identify human verified users.', 'elementor-pro' ) . '<br><br>',
+						'<a href="https://adcaptcha.com/" target="_blank">',
+						'</a>'
+					);
+					echo sprintf(
+						'<a href="%1$s" class="button" style="display: inline-block; padding: 10px 20px; background-color: #000; color: #fff; text-decoration: none; border-radius: 5px;">%2$s</a>',
+						esc_url('/adcaptcha/wp-admin/options-general.php?page=adcaptcha'),
+						esc_html__('Click to configure adCAPTCHA', 'elementor-pro')
+					);
+				},
+			]
+		);
 	}
-
+	
 	public function reset_captcha_script() {
         wp_add_inline_script( 'adcaptcha-script', 'document.addEventListener("submit", function(event) { ' . AdCaptcha::setupScript() . ' window.adcap.successToken = ""; }, false);' );
     }
 
 	public function render_field( $item, $item_index, $widget ) {
 		$html = '<div style="width: 100%; class="elementor-field" id="form-field-' . $item['custom_id'] . '">';
-
+		
         add_action( 'wp_enqueue_scripts', [ AdCaptcha::class, 'enqueue_scripts' ], 9 );
 		$html .= AdCaptcha::ob_captcha_trigger();
 
@@ -122,12 +132,12 @@ class Forms extends AdCaptchaPlugin {
 		$fields = $record->get_field( [
 			'type' => static::get_adcaptcha_name(),
 		] );
-
+	
 		if ( empty( $fields ) ) {
 			return;
 		}
+		
         $field = current( $fields );
-
         $successToken = sanitize_text_field(wp_unslash($_POST['adcaptcha_successToken']));
 
         if ( empty( $successToken ) ) {
@@ -136,14 +146,13 @@ class Forms extends AdCaptchaPlugin {
 			return;
 		}
 
-        $response = Verify::verify_token($successToken);
-
+        $response = $this->verify->verify_token($successToken);
+		
 		if ( $response === false ) {
 			$ajax_handler->add_error( $field['id'], __( 'Invalid, adCAPTCHA validation failed.', 'elementor-pro' ) );
 
 			return;
 		}
-
 		$record->remove_field( $field['id'] );
     }
 }

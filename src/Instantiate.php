@@ -3,20 +3,20 @@
 namespace AdCaptcha;
 
 use AdCaptcha\Settings\Settings;
-use AdCaptcha\Plugin\Login\Login;
-use AdCaptcha\Plugin\Registration\Registration;
-use AdCaptcha\Plugin\PasswordReset\PasswordReset;
-use AdCaptcha\Plugin\Comments\Comments;
-use AdCaptcha\Plugin\Woocommerce\Login\Login as WoocommerceLogin;
-use AdCaptcha\Plugin\Woocommerce\PasswordReset\PasswordReset as WoocommercePasswordReset;
-use AdCaptcha\Plugin\Woocommerce\Registration\Registration as WoocommerceRegistration;
-use AdCaptcha\Plugin\Woocommerce\Checkout\Checkout as WoocommerceCheckout;
-use AdCaptcha\Plugin\ContactFrom7\Froms\Forms as ContactForm7;
-use AdCaptcha\Plugin\Mailchimp\Froms\Forms as MailchimpForms;
-use AdCaptcha\Plugin\NinjaForms\Froms\Forms as NinjaForms;
-use AdCaptcha\Plugin\WPForms\Froms\Forms as WPForms;
-use AdCaptcha\Plugin\Elementor\Forms\Forms as Elementor;
-use AdCaptcha\Plugin\FluentForms\Forms\Forms as FluentForms;
+use AdCaptcha\Plugin\Login;
+use AdCaptcha\Plugin\Registration;
+use AdCaptcha\Plugin\PasswordReset;
+use AdCaptcha\Plugin\Comments;
+use AdCaptcha\Plugin\Woocommerce\Login as WoocommerceLogin;
+use AdCaptcha\Plugin\Woocommerce\PasswordReset as WoocommercePasswordReset;
+use AdCaptcha\Plugin\Woocommerce\Registration as WoocommerceRegistration;
+use AdCaptcha\Plugin\Woocommerce\Checkout as WoocommerceCheckout;
+use AdCaptcha\Plugin\ContactForm7\Forms as ContactForm7;
+use AdCaptcha\Plugin\Mailchimp\Forms as MailchimpForms;
+use AdCaptcha\Plugin\NinjaForms\Forms as NinjaForms;
+use AdCaptcha\Plugin\WPForms\Forms as WPForms;
+use AdCaptcha\Plugin\Elementor\Forms as Elementor;
+use AdCaptcha\Plugin\FluentForms\Forms as FluentForms;
 
 class Instantiate {
 

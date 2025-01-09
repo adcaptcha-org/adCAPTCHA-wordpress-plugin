@@ -1,8 +1,8 @@
 <?php
 
-namespace AdCaptcha\Settings\Advance;
+namespace AdCaptcha\Settings;
 
-class Advance {
+class Advanced {
      
     public function render_advance_settings() {
         if ($_SERVER["REQUEST_METHOD"] == "POST") {

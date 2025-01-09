@@ -1,6 +1,6 @@
 <?php
 
-namespace AdCaptcha\Widget\AdCaptcha;
+namespace AdCaptcha\Widget;
 
 class AdCaptcha {
 

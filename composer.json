@@ -1,0 +1,32 @@
+{
+    "name": "adcaptcha/plugin",
+    "description": "adCAPTCHA wordpress plugin",
+    "type": "wordpress-plugin",
+    "scripts": {
+        "test": "phpunit"
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "AdCaptcha\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "AdCaptcha\\Tests\\": "tests/"
+        }
+    },
+    "authors": [
+        {
+            "name": "adCAPTCHA development team",
+            "email": "support@adcaptcha.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require-dev": {
+        "phpunit/phpunit": "11.5.x-dev",
+        "10up/wp_mock": "^0.4.2",
+        "mockery/mockery": "1.7.x-dev",
+        "brain/monkey": "^2.0@dev"
+    }
+}

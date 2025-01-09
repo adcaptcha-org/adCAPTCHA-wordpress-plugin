@@ -1,14 +1,20 @@
 <?php
 
-namespace AdCaptcha\Plugin\Woocommerce\Checkout;
+namespace AdCaptcha\Plugin\Woocommerce;
 
-use AdCaptcha\Widget\AdCaptcha\AdCaptcha;
-use AdCaptcha\Widget\Verify\Verify;
-use AdCaptcha\AdCaptchaPlugin\AdCaptchaPlugin;
+use AdCaptcha\Widget\AdCaptcha;
+use AdCaptcha\Widget\Verify;
+use AdCaptcha\Plugin\AdCaptchaPlugin;
 
 use DateTime;
 
 class Checkout extends AdCaptchaPlugin {
+    private $verify;
+
+    public function __construct() {
+        parent::__construct();
+        $this->verify = new Verify();
+    }
 
     public function setup() { 
         add_action( 'wp_enqueue_scripts', [ AdCaptcha::class, 'enqueue_scripts' ] );
@@ -35,13 +41,13 @@ class Checkout extends AdCaptchaPlugin {
         }
 
         $successToken = sanitize_text_field(wp_unslash($_POST['adcaptcha_successToken']));
-        $response = Verify::verify_token($successToken);
 
+        $response = $this->verify->verify_token($successToken);
+  
         if ( !$response ) {
             wc_add_notice( __( 'Incomplete captcha, Please try again.', 'adcaptcha' ), 'error' );
             return;
         }
-
         // Add 10 minutes to the current date and time
         $date = new DateTime();
         $date->modify('+10 minutes');

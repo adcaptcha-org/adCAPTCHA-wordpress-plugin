@@ -1,6 +1,6 @@
 <?php
 
-namespace AdCaptcha\Settings\General;
+namespace AdCaptcha\Settings;
 
 class General {
 

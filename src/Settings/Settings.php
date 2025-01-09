@@ -57,15 +57,16 @@ class Settings {
             <?php
                 switch ($tab) {
                     case 'general':
-                        $generalSettings = new \AdCaptcha\Settings\General\General();
+                        $generalSettings = new \AdCaptcha\Settings\General();
                         $generalSettings->render_general_settings();
                         break;
                     case 'plugins':
-                        $pluginsSettings = new \AdCaptcha\Settings\Plugins\Plugins();
-                        $pluginsSettings->render_plugins_settings();
+
+                        $pluginsSettings = new \AdCaptcha\Settings\Plugins();
+                        $pluginsSettings->render_Plugins_settings();
                         break;
                     case 'advance':
-                        $advanceSettings = new \AdCaptcha\Settings\Advance\Advance();
+                        $advanceSettings = new \AdCaptcha\Settings\Advanced();
                         $advanceSettings->render_advance_settings();
                         break;
                 }
@@ -80,6 +81,6 @@ class Settings {
     }
 
     public function change_admin_footer_version() {
-        return 'Version 1.5.4';
+        return 'Version 1.5.5';
     }
 }
