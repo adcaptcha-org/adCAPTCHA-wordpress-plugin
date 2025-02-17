@@ -26,7 +26,19 @@ class Checkout extends AdCaptchaPlugin {
         add_action( 'woocommerce_review_order_before_submit', [ AdCaptcha::class, 'captcha_trigger' ] );
         add_action('woocommerce_payment_complete', [ $this, 'reset_hasVerified' ]);
         add_action( 'woocommerce_checkout_process', [ $this, 'verify' ] );
+        if (get_option('experimental_disable_wc_checkout_endpoint')) {
+            add_action('rest_api_init', 'disable_wc_endpoint_v1');
+        }
     }
+
+    function disable_wc_endpoint_v1() {
+        $current_url = $_SERVER['REQUEST_URI'];
+        if (strpos($current_url, '/wp-json/wc/store/v1/checkout') !== false || strpos($current_url, '/wp-json/wc/store/checkout') !== false) {
+            wp_redirect(home_url('/404.php'));
+            exit;
+        }
+    }
+
 
     public function verify() {
         $session = WC()->session;
