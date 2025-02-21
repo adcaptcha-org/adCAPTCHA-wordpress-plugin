@@ -39,7 +39,7 @@ class Advanced {
                                     <div class="checkbox-container">
                                         <h4 style="padding-right: 20px; font-size:medium;">Disable Checkout Endpoint:</h4>
                                         <input type="checkbox" id="wc-checkout" name="adcaptcha_advance[experimental_disable_wc_checkout_endpoint]" value="experimental_disable_wc_checkout_endpoint" <?php echo $checked_experimental; ?>>
-                                        <label class="checkbox-label" for="wc-checkout">Enable to disable the WooCommerce checkout endpoint. This will help prevent unauthorized request, for example stopping credit card fraud.</label><br>
+                                        <label class="checkbox-label" for="wc-checkout">Enable to disable the WooCommerce checkout endpoint. This will help prevent unauthorised request, for example stopping credit card fraud.</label><br>
                                     </div>
                             </div>
                         </div>

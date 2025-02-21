@@ -51,7 +51,7 @@ adCAPTCHA offers a unique proposition in the digital space by combining Security
 **Woocommerce**
 
 * Able to trigger adCAPTCHA on the "Place order" button.
-* Able to disable the WooCommerce checkout endpoint. This will help prevent unauthorized request, for example stopping credit card fraud.
+* Able to disable the WooCommerce checkout endpoint. This will help prevent unauthorised request, for example stopping credit card fraud.
 
 == Installation ==
 
