@@ -46,6 +46,13 @@ adCAPTCHA offers a unique proposition in the digital space by combining Security
 
 **Fluent Forms**
 
+== Advance Feature ==
+
+**Woocommerce**
+
+* Able to trigger adCAPTCHA on the "Place order" button.
+* Able to disable the WooCommerce checkout endpoint. This will help prevent unauthorized request, for example stopping credit card fraud.
+
 == Installation ==
 
 **Installation**
@@ -149,4 +156,4 @@ During verification, the adCAPTCHA service may briefly receive the user's IP add
 - If not configured manually, it will default to appearing above the submit button.
 
 = 1.5.6 =
-- Added experimental function to disable the WooCommerce checkout endpoint.
+- Added feature to disable the WooCommerce checkout endpoint.

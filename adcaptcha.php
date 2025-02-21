@@ -24,15 +24,19 @@ use AdCaptcha\Instantiate;
 const PLUGIN_VERSION_ADCAPTCHA = '1.5.6';
 define('ADCAPTCHA_ERROR_MESSAGE', __( 'Please complete the I am human box.', 'adcaptcha' ));
 
-// Deletes data saved in the wp db on plugin uninstall
-register_uninstall_hook( __FILE__, 'adcaptcha_uninstall' );
-
-function adcaptcha_uninstall() {
-    delete_option( 'adcaptcha_api_key' );
-    delete_option( 'adcaptcha_placement_id' );
-    delete_option( 'adcaptcha_render_captcha' );
-    delete_option( 'adcaptcha_selected_plugins' );
+if ( ! function_exists( 'adcaptcha_uninstall' ) ) {
+    // Deletes data saved in the wp db on plugin uninstall
+    function adcaptcha_uninstall() {
+        delete_option( 'adcaptcha_api_key' );
+        delete_option( 'adcaptcha_placement_id' );
+        delete_option( 'adcaptcha_render_captcha' );
+        delete_option( 'adcaptcha_selected_plugins' );
+        delete_option( 'experimental_disable_wc_checkout_endpoint' );
+        delete_option( 'adcaptcha_wc_checkout_optional_trigger' );
+    }
 }
+
+register_uninstall_hook( __FILE__, 'adcaptcha_uninstall' );
 
 $instantiate = new Instantiate();
 $instantiate->setup();
