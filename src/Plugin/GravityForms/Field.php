@@ -103,7 +103,7 @@ class Field extends GF_Field {
     }
 
     public function get_form_editor_field_settings() {
-        return [ 'description_setting', 'error_message_setting', 'label setting'];
+        return [ 'description_setting', 'error_message_setting'];
     }
 
     function custom_admin_field_icon_style() {
