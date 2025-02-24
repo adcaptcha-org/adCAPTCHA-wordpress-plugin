@@ -58,9 +58,7 @@ class Field extends GF_Field {
         }, 10, 2);
         add_filter('gform_validation', [$this, 'verify_captcha']);
         add_action('admin_head', [$this, 'custom_admin_field_icon_style']);
-        add_action('admin_init', function() {
-            $this->update_field_label(6, 12);
-        });
+        add_action('admin_init', [$this, 'update_adcaptcha_label']);
     }
 
     public function get_field_input($form, $value = '', $entry = null) {
@@ -78,25 +76,26 @@ class Field extends GF_Field {
         return $input;
     }
 
-    public function update_field_label($form_id, $field_id) {
-        $form = GFAPI::get_form($form_id);
-        if (!$form) {
+    public function update_adcaptcha_label() {
+        $forms = GFAPI::get_forms();
+        if (!$forms || !is_array($forms)) {
             return;
         }
-        foreach ($form['fields'] as &$field) {
-            if ($field->id == $field_id && $field->type === 'adcaptcha') {
-                $field->label = __('adCAPTCHA', 'adcaptcha');
-                $field['label'] = __('adCAPTCHA', 'adcaptcha');
-                $result = GFAPI::update_form($form);
-                if (is_wp_error($result)) {
-                    error_log("❌ Failed to update form label: " . $result->get_error_message());
-                } else {
-                    error_log("✅ Successfully updated adCAPTCHA field label.");
+        foreach ($forms as $form) {
+            foreach ($form['fields'] as &$field) {
+                if ($field->type === 'adcaptcha') {
+                    $field->label = __('adCAPTCHA', 'adcaptcha');
+                    $field['label'] = __('adCAPTCHA', 'adcaptcha');
+                    $result = GFAPI::update_form($form);
+                    if (is_wp_error($result)) {
+                        error_log("❌ Failed to update adCAPTCHA label in Form ID {$form['id']}: " . $result->get_error_message());
+                    } else {
+                        error_log("✅ Successfully updated adCAPTCHA label in Form ID {$form['id']}.");
+                    }
+                    return;
                 }
-                return;
             }
         }
-        error_log("⚠️ adCAPTCHA field not found in form ID {$form_id}.");
     }
 
     public function get_form_editor_field_title() {
@@ -104,7 +103,7 @@ class Field extends GF_Field {
     }
 
     public function get_form_editor_field_settings() {
-        return [ 'description_setting', 'error_message_setting'];
+        return [ 'description_setting', 'error_message_setting', 'label setting'];
     }
 
     function custom_admin_field_icon_style() {
@@ -143,11 +142,11 @@ class Field extends GF_Field {
 
     public function verify_captcha($validation_result) {
         $form = $validation_result['form'];
-        $is_valid = true;
+        $is_valid = $validation_result['is_valid'];
         foreach ($form['fields'] as &$field) {
             if ($field->type === 'adcaptcha') {
-                $successToken = sanitize_text_field(wp_unslash($_POST['adcaptcha_successToken']));
-                
+                $successToken = sanitize_text_field(wp_unslash($_POST['adcaptcha_successToken'] ?? ''));
+    
                 if (empty($successToken) || trim($successToken) === '') {
                     $field->failed_validation = true;
                     $field->validation_message = __('Incomplete CAPTCHA, Please try again.', 'adcaptcha');
@@ -159,8 +158,7 @@ class Field extends GF_Field {
                 }
             }
         }
-
-        $validation_result['is_valid'] = $is_valid;
+        $validation_result['is_valid'] = $is_valid; 
         $validation_result['form'] = $form;
         return $validation_result;
     }
