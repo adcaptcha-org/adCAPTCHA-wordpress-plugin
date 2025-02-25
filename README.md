@@ -40,7 +40,7 @@
 
 ### Fluent Forms
 
-## Advance Feature
+## Advance Features
 
 * Able to trigger adCAPTCHA on the "Place order" button.
 * Able to disable the WooCommerce checkout endpoint. This will help prevent unauthorised request, for example stopping credit card fraud.
