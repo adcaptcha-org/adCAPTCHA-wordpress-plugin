@@ -59,6 +59,7 @@ class Field extends GF_Field {
         add_filter('gform_validation', [$this, 'verify_captcha']);
         add_action('admin_head', [$this, 'custom_admin_field_icon_style']);
         add_action('admin_init', [$this, 'update_adcaptcha_label']);
+        add_action('admin_footer', [$this, 'enqueue_admin_script']);
     }
 
     public function get_field_input($form, $value = '', $entry = null) {
@@ -138,6 +139,28 @@ class Field extends GF_Field {
         ];
     
         return $field_groups;
+    }
+
+    public function enqueue_admin_script() {
+        ?>
+        <script>
+            (function($){
+                if (typeof window.CanFieldBeAdded !== 'function') {
+                    return;
+                }
+                let originalFunction = window.CanFieldBeAdded;
+                window.CanFieldBeAdded = function(type) {
+                    if (type === "adcaptcha") {
+                        if (GetFieldsByType(["adcaptcha"]).length > 0) {
+                            gform.instances.dialogAlert("Field Error", "Only one adCAPTCHA field can be added.");
+                            return false;
+                        }
+                    }
+                    return originalFunction(type);
+                };
+            })(jQuery);
+        </script>
+        <?php
     }
 
     public function verify_captcha($validation_result) {
