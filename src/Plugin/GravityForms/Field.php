@@ -70,9 +70,16 @@ class Field extends GF_Field {
         }
         $captcha_html = AdCaptcha::ob_captcha_trigger();
         $input = "<div class='ginput_container ginput_container_adcaptcha' id='ginput_container_{$field_id}'>" .
-        $captcha_html . 
-        "<input type='hidden' class='adcaptcha_successToken' name='adcaptcha_successToken' id='input_{$form_id}_{$field_id}' value='' />" .
-     "</div>";
+        $captcha_html .
+        "</div>";
+        $input .= "<script>
+            document.addEventListener('DOMContentLoaded', function() {
+                var hiddenToken = document.querySelector('.adcaptcha_successToken');
+                if (hiddenToken) {
+                    hiddenToken.id = 'input_{$form_id}_{$field_id}';
+                }
+            });
+        </script>";
 
         return $input;
     }
@@ -104,7 +111,7 @@ class Field extends GF_Field {
     }
 
     public function get_form_editor_field_settings() {
-        return [ 'description_setting', 'error_message_setting'];
+        return [ 'description_setting', 'error_message_setting', 'label_placement_setting', 'css_class_setting',];
     }
 
     function custom_admin_field_icon_style() {
