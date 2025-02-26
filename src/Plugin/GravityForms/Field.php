@@ -208,7 +208,6 @@ class Field extends GF_Field {
         $is_valid = $validation_result['is_valid'];
         foreach ($form['fields'] as &$field) {
             if ($field->type === 'adcaptcha') {
-                error_log(print_r($field, true));
                 $successToken = sanitize_text_field(wp_unslash($_POST['adcaptcha_successToken'] ?? ''));
                 if (empty($successToken) || trim($successToken) === '') {
                     $field->failed_validation = true;
