@@ -60,13 +60,46 @@ class Field extends GF_Field {
         add_action('admin_head', [$this, 'custom_admin_field_icon_style']);
         add_action('admin_init', [$this, 'update_adcaptcha_label']);
         add_action('admin_footer', [$this, 'enqueue_admin_script']);
+        add_filter('gform_pre_render', function($form) {
+            if (!empty($_POST['adcaptcha_successToken'])) {
+                echo "<script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        let adCaptchaField = document.querySelector('.adcaptcha_successToken');
+                        if (adCaptchaField) {
+                            setTimeout(function() {
+                                if (window.adcap) {
+                                    window.adcap.setVerificationState('success');
+                                     adCaptchaField.value = '" . esc_js($_POST['adcaptcha_successToken']) . "';
+                                }
+                            }, 500);
+                        }
+                    });
+                </script>";
+            }
+            return $form;
+        });
+        add_action('gform_preview_body_open', [$this, 'enqueue_preview_scripts']);
+    }
+
+    public function enqueue_preview_scripts($form_id) {
+        echo "<script>
+            document.addEventListener('DOMContentLoaded', function() {
+                let captchaContainer = document.querySelector('.ginput_container_adcaptcha');
+                if (captchaContainer) {
+                    let messageDiv = document.createElement('div');
+                    messageDiv.className = 'ginput_container adcaptcha-message';
+                    messageDiv.innerText = 'adCAPTCHA will be rendered here.';
+                    captchaContainer.prepend(messageDiv);
+                }
+            });
+        </script>";
     }
 
     public function get_field_input($form, $value = '', $entry = null) {
         $form_id = $form['id'];
         $field_id = (int) $this->id;
         if ($this->is_form_editor()) {
-            return "<div class='ginput_container'>AdCaptcha will be rendered here.</div>";
+            return "<div class='ginput_container'>adCAPTCHA will be rendered here.</div>";
         }
         $captcha_html = AdCaptcha::ob_captcha_trigger();
         $input = "<div class='ginput_container ginput_container_adcaptcha' id='ginput_container_{$field_id}'>" .
@@ -175,18 +208,22 @@ class Field extends GF_Field {
         $is_valid = $validation_result['is_valid'];
         foreach ($form['fields'] as &$field) {
             if ($field->type === 'adcaptcha') {
+                error_log(print_r($field, true));
                 $successToken = sanitize_text_field(wp_unslash($_POST['adcaptcha_successToken'] ?? ''));
-    
                 if (empty($successToken) || trim($successToken) === '') {
                     $field->failed_validation = true;
                     $field->validation_message = __('Incomplete CAPTCHA, Please try again.', 'adcaptcha');
                     $is_valid = false;
-                } elseif (!$this->verify->verify_token($successToken)) {
-                    $field->failed_validation = true;
-                    $field->validation_message = __('Invalid token.', 'adcaptcha');
-                    $is_valid = false;
-                }
-            }
+                } 
+                if($is_valid) {
+                    $response = $this->verify->verify_token($successToken);
+                    if (!$response) {
+                        $field->failed_validation = true;
+                        $field->validation_message = __('Invalid token.', 'adcaptcha');
+                        $is_valid = false;
+                    }
+                } 
+            } 
         }
         $validation_result['is_valid'] = $is_valid; 
         $validation_result['form'] = $form;
