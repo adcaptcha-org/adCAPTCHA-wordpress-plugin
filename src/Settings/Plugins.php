@@ -53,6 +53,12 @@ class Plugins {
                 'options' => array('Forms'),
                 'message' => ''
             ),
+            array(
+                'label' => 'Forminator',
+                'logo' => 'forminator3.jpeg',
+                'options' => array('Forms'),
+                'message' => ''
+            )
         );
 
         $saved_setting = false;
