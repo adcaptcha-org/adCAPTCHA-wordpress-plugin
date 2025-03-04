@@ -55,7 +55,7 @@ class Plugins {
             ),
             array(
                 'label' => 'Forminator',
-                'logo' => 'forminator3.jpeg',
+                'logo' => 'forminator.jpeg',
                 'options' => array('Forms'),
                 'message' => ''
             )

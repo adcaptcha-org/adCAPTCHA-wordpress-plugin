@@ -8,7 +8,6 @@ use AdCaptcha\Plugin\AdCaptchaPlugin;
 
 class Forms extends AdCaptchaPlugin {
     private $verify;
-    private $verified = false;
     private $has_captcha = false;
 
     public function __construct() {
@@ -67,14 +66,8 @@ class Forms extends AdCaptchaPlugin {
     }
 
     public function verify($can_show, $form_id, $field_data_array) {
-        if ($this->verified) {
-            error_log('[AdCaptcha] Already verified.');
-            return $can_show;
-        }
-    
         $successToken = sanitize_text_field(wp_unslash($_POST['adcaptcha_successToken'] ?? ''));
         if (empty($successToken)) {
-            error_log('[AdCaptcha] No token received.');
             return [
                 'can_submit' => false,
                 'error'      => __('Please complete the AdCaptcha verification.', 'adcaptcha'),
@@ -82,14 +75,11 @@ class Forms extends AdCaptchaPlugin {
         }
         $response = $this->verify->verify_token($successToken);
         if (!$response) {
-            error_log('[AdCaptcha] Verification failed.');
             return [
                 'can_submit' => false,
                 'error'      => __('AdCaptcha verification failed. Please try again.', 'adcaptcha'),
             ];
         }
-
-        $this->verified = true;
         return $can_show;
     }
 }
