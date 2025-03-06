@@ -25,4 +25,3 @@ class Forms extends AdCaptchaPlugin {
     }
     }
 }
-
