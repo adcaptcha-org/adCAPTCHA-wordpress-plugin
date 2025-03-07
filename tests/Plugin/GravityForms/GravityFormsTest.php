@@ -40,41 +40,6 @@ class MockGF_Field {
     }
 }
 
-// class MockGFAPIWithFields {
-//     public static function get_forms() {
-//         return [
-//             [
-//                 'id'     => 6,
-//                 'title'  => 'TestGravity5.0',
-//                 'fields' => [
-//                     (object) [
-//                         'id'    => 1,
-//                         'type'  => 'name',
-//                         'label' => 'Name',
-//                     ],
-//                     (object) [
-//                         'id'    => 18,
-//                         'type'  => 'checkbox',
-//                         'label' => 'Untitled',
-//                     ],
-//                     (object) [
-//                         'id'    => 45,
-//                         'type'  => 'adcaptcha',
-//                         'label' => 'dummyLabel', 
-//                     ],
-//                 ]
-//             ]
-//         ];
-//     }
-
-//     public static function update_form($form) {
-//         if ($form[0]['id'] === 6) { 
-//             return new WP_Error('update_failed', 'Simulated update failure');
-//         }
-//         return true; 
-//     }
-// }
-
  use PHPUnit\Framework\TestCase;
  use AdCaptcha\Plugin\GravityForms\Forms;
  use AdCaptcha\Plugin\GravityForms\Field;
@@ -84,8 +49,6 @@ class MockGF_Field {
  use Brain\Monkey\Functions;
  use Mockery;
  use ReflectionClass;
- use Tests\Mocks\WPErrorMock;
- use Exception;
 
  class GravityFormsTest extends TestCase {
     private $forms;
@@ -106,9 +69,6 @@ class MockGF_Field {
         }
         if(!class_exists('GF_Field', false)) {
             class_alias(MockGF_Field::class, 'GF_Field');
-        }
-        if(!class_exists('WP_Error', false)) {
-            class_alias(WPErrorMock::class, 'WP_Error');
         }
 
         Functions\when('esc_html__')->alias(function ($text, $domain) {
@@ -143,7 +103,6 @@ class MockGF_Field {
         });
 
         $this->mockGFAPI = Mockery::mock('alias:GFAPI');
-
         $this->forms = new Forms();
         $this->field = new Field($this->mockGFAPI);
 
@@ -338,45 +297,6 @@ class MockGF_Field {
                     ->andReturn([]);
         $result = $this->field->update_adcaptcha_label();
         $this->assertNull($result, 'Expected null return value from update_adcaptcha_label');
-    }
-
-    // Tests updating the adCAPTCHA label in a form and handles a simulated update failure.
-    public function testUpdateAdcaptchaLabelFormWithFields() {
-        $mockedForms = [
-            [
-                'id'     => 6,
-                'title'  => 'TestGravity5.0',
-                'fields' => [
-                    (object) [
-                        'id'    => 1,
-                        'type'  => 'name',
-                        'label' => 'Name',
-                    ],
-                    (object) [
-                        'id'    => 18,
-                        'type'  => 'checkbox',
-                        'label' => 'Untitled',
-                    ],
-                    (object) [
-                        'id'    => 45,
-                        'type'  => 'adcaptcha',
-                        'label' => 'dummyLabel',
-                    ],
-                ],
-            ],
-        ];
-        $wpMock = new WPErrorMock();
-        $this->mockGFAPI->shouldReceive('get_forms')
-                        ->once()
-                        ->andReturn($mockedForms);
-        
-        $this->mockGFAPI->shouldReceive('update_form')
-                        ->with(Mockery::on(function ($form) {
-                            return $form['id'] === 6;
-                        }))
-                        ->andReturn(new \WP_Error('update_failed', 'Simulated update failure'));     
-        $result = $this->field->update_adcaptcha_label(); 
-        $this->assertEquals('Failed to update adCAPTCHA label in Form ID 6: Simulated update failure', $result[0], 'Expected error message when update fails');
     }
 
     // Tests that 'enqueue_admin_script' outputs the expected JavaScript for limiting adCAPTCHA field additions.

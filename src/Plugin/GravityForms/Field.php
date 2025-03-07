@@ -120,27 +120,17 @@ class Field extends GF_Field {
         if (!$forms || !is_array($forms)) {
             return;
         }
-        $errors = [];
         foreach ($forms as $form) {
             $updated = false;
             foreach ($form['fields'] as &$field) {
                 if ($field->type === 'adcaptcha' && $field->label !== __('adCAPTCHA', 'adcaptcha')) {
                     $field->label = __('adCAPTCHA', 'adcaptcha');
-                    // $field['label'] = __('adCAPTCHA', 'adcaptcha');
                     $updated = true;
                 }
             }
-            if (!$updated) {
-                continue;
+            if ($updated) {
+                GFAPI::update_form($form);  
             }
-            $result = GFAPI::update_form($form);
-            if (function_exists('is_wp_error') && is_wp_error($result)) {
-                $errorMessage = "Failed to update adCAPTCHA label in Form ID {$form['id']}: " . $result->get_error_message();
-                $errors[] = $errorMessage;
-            }   
-        }
-        if (!empty($errors)) {
-            return $errors;
         }
     }
 
