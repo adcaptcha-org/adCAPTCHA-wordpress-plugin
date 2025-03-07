@@ -4,8 +4,7 @@
  * 
  * @package AdCaptcha
  */
-
- namespace AdCaptcha\Tests\Plugin\GravityForms;
+namespace AdCaptcha\Tests\Plugin\GravityForms;
 
  class MockGF_Fields {
     public static bool $wasCalled = false;
@@ -41,38 +40,40 @@ class MockGF_Field {
     }
 }
 
-class MockGFAPI {
-    public static function get_forms() {
-        return [];
-    }
-}
+// class MockGFAPIWithFields {
+//     public static function get_forms() {
+//         return [
+//             [
+//                 'id'     => 6,
+//                 'title'  => 'TestGravity5.0',
+//                 'fields' => [
+//                     (object) [
+//                         'id'    => 1,
+//                         'type'  => 'name',
+//                         'label' => 'Name',
+//                     ],
+//                     (object) [
+//                         'id'    => 18,
+//                         'type'  => 'checkbox',
+//                         'label' => 'Untitled',
+//                     ],
+//                     (object) [
+//                         'id'    => 45,
+//                         'type'  => 'adcaptcha',
+//                         'label' => 'dummyLabel', 
+//                     ],
+//                 ]
+//             ]
+//         ];
+//     }
 
-class MockGFAPIWithFields {
-    public static function get_forms() {
-        return [
-            [ // ✅ Use an array instead of an object
-                'id'     => 1,
-                'title'  => 'Test Form',
-                'fields' => [
-                    (object) ['id' => 1, 'type' => 'text', 'label' => 'Text Field'],
-                    (object) ['id' => 2, 'type' => 'adcaptcha', 'label' => 'Incorrect Label'],
-                ]
-            ],
-            [ // ✅ Use an array instead of an object
-                'id'     => 2,
-                'title'  => 'Another Form',
-                'fields' => [
-                    (object) ['id' => 3, 'type' => 'email', 'label' => 'Email Field'],
-                    (object) ['id' => 4, 'type' => 'adcaptcha', 'label' => 'adCAPTCHA'],
-                ]
-            ]
-        ];
-    }
-
-    public static function update_form($form) {
-        return true;
-    }
-}
+//     public static function update_form($form) {
+//         if ($form[0]['id'] === 6) { 
+//             return new WP_Error('update_failed', 'Simulated update failure');
+//         }
+//         return true; 
+//     }
+// }
 
  use PHPUnit\Framework\TestCase;
  use AdCaptcha\Plugin\GravityForms\Forms;
@@ -83,11 +84,14 @@ class MockGFAPIWithFields {
  use Brain\Monkey\Functions;
  use Mockery;
  use ReflectionClass;
+ use Tests\Mocks\WPErrorMock;
+ use Exception;
 
  class GravityFormsTest extends TestCase {
     private $forms;
     private $verifyMock;
     private $field;
+    private $mockGFAPI;
 
     public function setUp(): void {
         parent::setUp();
@@ -102,6 +106,9 @@ class MockGFAPIWithFields {
         }
         if(!class_exists('GF_Field', false)) {
             class_alias(MockGF_Field::class, 'GF_Field');
+        }
+        if(!class_exists('WP_Error', false)) {
+            class_alias(WPErrorMock::class, 'WP_Error');
         }
 
         Functions\when('esc_html__')->alias(function ($text, $domain) {
@@ -135,8 +142,10 @@ class MockGFAPIWithFields {
             return '';
         });
 
+        $this->mockGFAPI = Mockery::mock('alias:GFAPI');
+
         $this->forms = new Forms();
-        $this->field = new Field();
+        $this->field = new Field($this->mockGFAPI);
 
         $this->verifyMock = $this->createMock(Verify::class);
         $reflection = new \ReflectionClass($this->field);
@@ -153,6 +162,7 @@ class MockGFAPIWithFields {
         parent::tearDown();
     }
 
+    // Tests if the 'setup' method exists and properly registers the 'gform_loaded' action with the expected parameters.
     public function testSetup() {
         $this->assertTrue(method_exists($this->forms, 'setup'), 'Method setup does not exist');
         global $mocked_actions;
@@ -167,12 +177,14 @@ class MockGFAPIWithFields {
         $this->assertInstanceOf(\Closure::class, $registeredAction['callback'], 'Expected a Closure as the callback.');
     }
 
+    // Tests if the 'register_adcaptcha_field' method exists and returns null as expected.
     public function testRegisterAdcaptchaField() {
         $this->assertTrue(method_exists($this->forms, 'register_adcaptcha_field'), 'Method register_adcaptcha_field does not exist');
         $result = $this->forms->register_adcaptcha_field();
         $this->assertNull($result, 'Expected null return value from register_adcaptcha_field');
     }
 
+    // Tests if the 'setup_hooks' method exists and correctly registers expected actions and filters.
     public function testSetupHooks() {
         $this->assertTrue(method_exists($this->field, 'setup_hooks'), 'Method setup_hooks does not exist');
 
@@ -219,6 +231,7 @@ class MockGFAPIWithFields {
         );
     }
 
+    // Tests if 'add_to_field_groups' correctly adds the adCAPTCHA field to advanced fields and avoids duplication.
     public function testAddToFieldGroups() {
         $this->assertTrue(method_exists($this->field, 'add_to_field_groups'), 'Method add_to_field_groups does not exist');
         $field_groups = [
@@ -245,6 +258,7 @@ class MockGFAPIWithFields {
         $this->assertEquals($field_groups_adcaptcha, $fieldWithAdcaptcha, 'Expected the field groups to remain unchanged if adcaptcha field is already present');
     }
 
+    // Tests if 'modify_gform_field_content' removes the label from adCAPTCHA fields while keeping other content unchanged.
     public function testModifyGformFieldContent() {
         $this->assertTrue(method_exists($this->field, 'modify_gform_field_content'), 'Method modify_gform_field_content does not exist');
         $field = new MockGF_Field('adcaptcha');
@@ -256,6 +270,7 @@ class MockGFAPIWithFields {
         $this->assertEquals($expectedModifiedContent, $modifiedContent, 'Expected label to be removed for adcaptcha fields');
     }
 
+    // Tests if 'verify_captcha' fails validation when the CAPTCHA token is empty.
     public function testVerifyCaptchaFailsWhenTokenIsEmpty() {
         Functions\when('wp_unslash')->justReturn('');
         $validation_result = [
@@ -268,6 +283,7 @@ class MockGFAPIWithFields {
         $this->assertEquals('Incomplete CAPTCHA, Please try again.', $result['form']['fields'][0]->validation_message);
     }
 
+    // Tests if 'verify_captcha' fails validation when token verification fails.
     public function testVerifyCaptchaFailsWhenTokenVerificationFails() {
         Functions\when('wp_unslash')->justReturn('invalid_token');
         $this->verifyMock->method('verify_token')->willReturn(false);
@@ -281,6 +297,7 @@ class MockGFAPIWithFields {
         $this->assertEquals('Invalid token.', $result['form']['fields'][0]->validation_message);
     }
 
+    // Tests if 'verify_captcha' passes validation when a valid token is provided.
     public function testVerifyCaptchaSucceedsWhenTokenIsValid() {
         Functions\when('wp_unslash')->justReturn('valid_token');
         $this->verifyMock->method('verify_token')->willReturn(true);
@@ -302,6 +319,7 @@ class MockGFAPIWithFields {
         $this->assertEmpty($result['form']['fields'][0]->validation_message);
     }
 
+    // Tests if 'custom_admin_field_icon_style' outputs the expected CSS styles.
     public function testCustomAdminFieldIconStyle() {
         $this->assertTrue(method_exists($this->field, 'custom_admin_field_icon_style'), 'Method custom_admin_field_icon_style does not exist');
         ob_start();
@@ -312,35 +330,56 @@ class MockGFAPIWithFields {
             }", $capturedOutput, 'Expected the style to be output');
     }
 
-    // public function testUpdateAdcaptchaLabelFormEmpty() {
-    //     if(!class_exists('GFAPI', false)) {
-    //         class_alias(MockGFAPI::class, 'GFAPI');
-    //     }
-    //     $this->assertTrue(method_exists($this->field, 'update_adcaptcha_label'), 'Method update_adcaptcha_label does not exist');
-    //     $result = $this->field->update_adcaptcha_label();
-    //     $this->assertNull($result, 'Expected null return value from update_adcaptcha_label');
-    // }
-
-    public function testUpdateAdcaptchaLabelFormWithFields() {
-        if(!class_exists('GFAPI', false)) {
-            class_alias(MockGFAPIWithFields::class, 'GFAPI');
-        }
+    // Tests that 'update_adcaptcha_label' returns null when there are no forms to update.
+    public function testUpdateAdcaptchaLabelFormEmpty() {
+        $this->assertTrue(method_exists($this->field, 'update_adcaptcha_label'), 'Method update_adcaptcha_label does not exist');
+        $this->mockGFAPI->shouldReceive('get_forms')
+                    ->once()
+                    ->andReturn([]);
         $result = $this->field->update_adcaptcha_label();
-        // var_dump($result);
-        // $forms = [
-        //     (object) [
-        //         'fields' => [
-        //             (object) ['type' => 'text'],
-        //             (object) ['type' => 'adcaptcha', 'label' => 'AdCaptcha Label'],
-        //         ]
-        //     ]
-        // ];
-        // Functions\when('GFAPI::get_forms')->justReturn($forms);
-        // $this->assertTrue(method_exists($this->field, 'update_adcaptcha_label'), 'Method update_adcaptcha_label does not exist');
-        // $result = $this->field->update_adcaptcha_label();
-        // $this->assertNull($result, 'Expected null return value from update_adcaptcha_label');
+        $this->assertNull($result, 'Expected null return value from update_adcaptcha_label');
     }
 
+    // Tests updating the adCAPTCHA label in a form and handles a simulated update failure.
+    public function testUpdateAdcaptchaLabelFormWithFields() {
+        $mockedForms = [
+            [
+                'id'     => 6,
+                'title'  => 'TestGravity5.0',
+                'fields' => [
+                    (object) [
+                        'id'    => 1,
+                        'type'  => 'name',
+                        'label' => 'Name',
+                    ],
+                    (object) [
+                        'id'    => 18,
+                        'type'  => 'checkbox',
+                        'label' => 'Untitled',
+                    ],
+                    (object) [
+                        'id'    => 45,
+                        'type'  => 'adcaptcha',
+                        'label' => 'dummyLabel',
+                    ],
+                ],
+            ],
+        ];
+        $wpMock = new WPErrorMock();
+        $this->mockGFAPI->shouldReceive('get_forms')
+                        ->once()
+                        ->andReturn($mockedForms);
+        
+        $this->mockGFAPI->shouldReceive('update_form')
+                        ->with(Mockery::on(function ($form) {
+                            return $form['id'] === 6;
+                        }))
+                        ->andReturn(new \WP_Error('update_failed', 'Simulated update failure'));     
+        $result = $this->field->update_adcaptcha_label(); 
+        $this->assertEquals('Failed to update adCAPTCHA label in Form ID 6: Simulated update failure', $result[0], 'Expected error message when update fails');
+    }
+
+    // Tests that 'enqueue_admin_script' outputs the expected JavaScript for limiting adCAPTCHA field additions.
     public function testEnqueueAdminScript() {
         $this->assertTrue(method_exists($this->field, 'enqueue_admin_script'), 'Method enqueue_admin_script does not exist');
         ob_start();
@@ -361,6 +400,7 @@ class MockGFAPIWithFields {
                 };', $capturedOutput, 'Expected the script to be output');
     }
 
+    // Tests that 'handle_adcaptcha_token' correctly returns the form and outputs a script when a success token is present.
     public function testHandleAdcaptchaToken() {
         $this->assertTrue(method_exists($this->field, 'handle_adcaptcha_token'), 'Method handle_adcaptcha_token does not exist');
 
@@ -388,6 +428,7 @@ class MockGFAPIWithFields {
                     }", $capturedOutput, 'Expected the script to be output');
     }
 
+    // Tests that 'enqueue_preview_scripts' outputs the expected JavaScript for rendering adCAPTCHA in preview mode.
     public function testEnqueuePreviewScripts() {
         $this->assertTrue(method_exists($this->field, 'enqueue_preview_scripts'), 'Method enqueue_preview_scripts does not exist');
         $formID = 1;
@@ -404,6 +445,7 @@ class MockGFAPIWithFields {
                 }", $capturedOutput, 'The enqueue_preview_scripts method was not called correctly.');
     }
 
+    // Tests that 'get_field_input' returns the correct HTML output based on form ID and editor mode.
     public function testGetFieldInput() {
         $this->assertTrue(method_exists($this->field, 'get_field_input'), 'Method get_field_input does not exist');
         $form = ['id' => null];
@@ -425,6 +467,7 @@ class MockGFAPIWithFields {
             });", $result, 'Expected CAPTCHA HTML to be rendered when is_form_editor is false');
     }
 
+    // Tests that 'get_form_editor_field_title' returns the expected title with the correct text domain.
     public function testGetFormEditorFieldTitle() {
         $this->assertTrue(
             method_exists($this->field, 'get_form_editor_field_title'),
@@ -440,6 +483,7 @@ class MockGFAPIWithFields {
         );
     }
 
+    // Tests that 'get_form_editor_field_settings' returns an array with the expected field settings.
     public function testGetFormEditorFieldSettings() {
         $this->assertTrue(method_exists($this->field, 'get_form_editor_field_settings'), 'Method get_form_editor_field_settings does not exist');
         $data = [ 'description_setting', 'error_message_setting', 'label_placement_setting', 'css_class_setting',];
@@ -448,6 +492,7 @@ class MockGFAPIWithFields {
         $this->assertEquals($data, $result, 'Expected the array keys to match the expected data');
     }
 
+    // Tests that 'get_form_editor_field_description' returns the expected description with the correct text domain.
     public function testGetFormEditorFieldDescription() {
         $this->assertTrue(
             method_exists($this->field, 'get_form_editor_field_description'),
@@ -463,6 +508,7 @@ class MockGFAPIWithFields {
         );
     }
 
+    // Tests that 'get_form_editor_field_icon' returns the correct icon URL.
     public function testGetFromEditorFieldIcon() {
         $this->assertTrue(method_exists($this->field, 'get_form_editor_field_icon'), 'Method get_form_editor_field_icon does not exist');
         $icon_url = $this->field->get_form_editor_field_icon();
