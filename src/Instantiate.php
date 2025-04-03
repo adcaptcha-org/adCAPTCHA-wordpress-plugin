@@ -17,6 +17,7 @@ use AdCaptcha\Plugin\NinjaForms\Forms as NinjaForms;
 use AdCaptcha\Plugin\WPForms\Forms as WPForms;
 use AdCaptcha\Plugin\Elementor\Forms as Elementor;
 use AdCaptcha\Plugin\FluentForms\Forms as FluentForms;
+use AdCaptcha\Plugin\Forminator\Forms as Forminator;
 use AdCaptcha\Plugin\GravityForms\Forms as GravityForms;
 
 class Instantiate {
@@ -84,6 +85,11 @@ class Instantiate {
                 'instance' => FluentForms::class,
                 'plugin' => [ 'fluentform/fluentform.php' ],
             ],
+
+            'Forminator_Forms' => [
+                'instance' => Forminator::class,
+                'plugin' => [ 'forminator/forminator.php' ],
+              
             'GravityForms_Forms' => [
                 'instance' => GravityForms::class,
                 'plugin' => [ 'gravityforms/gravityforms.php' ],
