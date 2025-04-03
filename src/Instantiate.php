@@ -89,11 +89,11 @@ class Instantiate {
             'Forminator_Forms' => [
                 'instance' => Forminator::class,
                 'plugin' => [ 'forminator/forminator.php' ],
-              
+            ],
             'GravityForms_Forms' => [
                 'instance' => GravityForms::class,
-                'plugin' => [ 'gravityforms/gravityforms.php' ],
-            ],
+                'plugin' => [ 'gravityforms/gravityforms.php' ]
+            ]
         ];
 
         $selected_plugins = get_option('adcaptcha_selected_plugins') ? get_option('adcaptcha_selected_plugins') : array();
