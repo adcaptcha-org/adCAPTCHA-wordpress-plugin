@@ -46,6 +46,10 @@ adCAPTCHA offers a unique proposition in the digital space by combining Security
 
 **Fluent Forms**
 
+**Gravity Forms**
+
+**Forminator**
+
 == Advance Features ==
 
 **Woocommerce**
