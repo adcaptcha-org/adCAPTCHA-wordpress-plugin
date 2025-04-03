@@ -58,7 +58,13 @@ class Plugins {
                 'logo' => 'forminator.jpeg',
                 'options' => array('Forms'),
                 'message' => ''
-            )
+            ),
+            array(
+                'label' => 'GravityForms',
+                'logo' => 'gravity-forms_logo.svg',
+                'options' => array('Forms'),
+                'message' => ''
+            ),
         );
 
         $saved_setting = false;

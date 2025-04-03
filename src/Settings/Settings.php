@@ -81,6 +81,6 @@ class Settings {
     }
 
     public function change_admin_footer_version() {
-        return 'Version 1.5.5';
+        return 'Version 1.6.0';
     }
 }
