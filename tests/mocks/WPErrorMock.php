@@ -29,11 +29,11 @@ class WPErrorMock {
 
     public function get_error_message($code = '') {
         if (empty($code)) {
-            return array_shift($this->errors); 
+            $code = array_key_first($this->errors); 
         }
-        return isset($this->errors[$code]) ? $this->errors[$code][0] : null;
+    
+        return isset($this->errors[$code]) ? $this->errors[$code][0] : '';
     }
-
     public function get_error_data($code = '') {
         return isset($this->error_data[$code]) ? $this->error_data[$code] : null;
     }

@@ -9,16 +9,18 @@ use AdCaptcha\Widget\AdCaptcha;
 use AdCaptcha\Widget\Verify;
 use Exception;
 
-if (!class_exists('GF_Field')) {
+// update the condition for testing environment
+if (!class_exists('GF_Field') && !defined('PHPUNIT_RUNNING')) {
     return;
 }
 
 class Field extends GF_Field { 
-    public $type = 'adcaptcha';
+    public $type;
     private $verify;
 
     public function __construct($data = []) {
         parent::__construct($data);
+        $this->type = 'adcaptcha';
         $this->verify = new Verify();
         $this->setup();
     }
@@ -64,7 +66,7 @@ class Field extends GF_Field {
             }
         }
         $field_groups['advanced_fields']['fields'][] = [
-            'data-type' => $this->type,
+            'data-type' => (string) $this->type,
             'value'     => $this->get_form_editor_field_title(),
             'label'     => $this->get_form_editor_field_title(),
         ];
@@ -190,7 +192,10 @@ class Field extends GF_Field {
     }
 
     public function get_field_input($form, $value = '', $entry = null) {
-        $form_id = $form['id'];
+        $form_id = $form['id'] ?? null;
+        if ($form_id === null) {
+            return '';
+        }
         $field_id = (int) $this->id;
         if ($this->is_form_editor()) {
             return "<div class='ginput_container'>adCAPTCHA will be rendered here.</div>";
