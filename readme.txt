@@ -157,3 +157,6 @@ During verification, the adCAPTCHA service may briefly receive the user's IP add
 
 = 1.6.0 =
 - Added feature to disable the WooCommerce checkout endpoint.
+
+= 1.7.0 =
+- Feature: Added support for Gravity Forms and Forminator.
