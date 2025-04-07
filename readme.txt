@@ -4,7 +4,7 @@ Contributors: adCAPTCHA
 Tags: spam, anti-spam, block bots, security, adCAPTCHA
 Requires at least: 6.0
 Tested up to: 6.5.2
-Stable tag: 1.6.0
+Stable tag: 1.7.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -45,6 +45,10 @@ adCAPTCHA offers a unique proposition in the digital space by combining Security
 **Elementor**
 
 **Fluent Forms**
+
+**Gravity Forms**
+
+**Forminator**
 
 == Advance Features ==
 
@@ -157,3 +161,6 @@ During verification, the adCAPTCHA service may briefly receive the user's IP add
 
 = 1.6.0 =
 - Added feature to disable the WooCommerce checkout endpoint.
+
+= 1.7.0 =
+- Feature: Added support for Gravity Forms and Forminator.
